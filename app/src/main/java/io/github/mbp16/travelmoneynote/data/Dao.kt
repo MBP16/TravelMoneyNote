@@ -64,6 +64,9 @@ interface CashEntryDao {
     
     @Delete
     suspend fun delete(cashEntry: CashEntry)
+
+    @Update
+    suspend fun update(cashEntry: CashEntry)
 }
 
 @Dao

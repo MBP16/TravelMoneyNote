@@ -16,13 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.PersonWithBalance
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
-    onNavigateToAddPerson: () -> Unit,
-    onNavigateToAddCash: () -> Unit,
     onNavigateToAddExpense: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToPersonDetail: (Long) -> Unit,
@@ -36,6 +35,11 @@ fun HomeScreen(
     
     val currencySymbol = availableCurrencies.find { it.code == currentCurrency }?.symbol ?: "₩"
     val selectedTravel = travels.find { it.id == selectedTravelId }
+
+    var showAddPersonSheet by remember { mutableStateOf(false) }
+    var showAddCashSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
     
     Scaffold(
         topBar = {
@@ -89,113 +93,150 @@ fun HomeScreen(
             }
         } else {
             LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Text(
-                    text = "인원 현황",
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
-            
-            if (personsWithBalance.isEmpty()) {
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "등록된 인원이 없습니다",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
-            } else {
-                items(personsWithBalance) { personWithBalance ->
-                    PersonBalanceCard(
-                        personWithBalance = personWithBalance,
-                        currencySymbol = currencySymbol,
-                        onDelete = { viewModel.deletePerson(personWithBalance.person) },
-                        onEdit = { newName -> 
-                            viewModel.updatePerson(personWithBalance.person.copy(name = newName))
-                        },
-                        onClick = { onNavigateToPersonDetail(personWithBalance.person.id) }
-                    )
-                }
-            }
-            
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = onNavigateToAddPerson,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("사람 추가")
-                    }
-                    Button(
-                        onClick = onNavigateToAddCash,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("현금 추가")
-                    }
-                }
-            }
-            
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
                     Text(
-                        text = "소비 내역",
+                        text = "인원 현황",
                         style = MaterialTheme.typography.titleLarge
                     )
-                    Button(
-                        onClick = onNavigateToAddExpense,
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("소비 추가")
-                    }
                 }
-            }
-            
-            if (expenses.isEmpty()) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "소비 내역이 없습니다",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium
+                
+                if (personsWithBalance.isEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "등록된 인원이 없습니다",
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                } else {
+                    items(personsWithBalance) { personWithBalance ->
+                        PersonBalanceCard(
+                            personWithBalance = personWithBalance,
+                            currencySymbol = currencySymbol,
+                            onDelete = { viewModel.deletePerson(personWithBalance.person) },
+                            onEdit = { newName -> 
+                                viewModel.updatePerson(personWithBalance.person.copy(name = newName))
+                            },
+                            onClick = { onNavigateToPersonDetail(personWithBalance.person.id) }
                         )
                     }
                 }
-            } else {
-                items(expenses) { expense ->
-                    ExpenseCard(
-                        expense = expense,
-                        viewModel = viewModel,
-                        currencySymbol = currencySymbol,
-                        onClick = { onNavigateToEditExpense(expense.id) }
-                    )
+                
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { showAddPersonSheet = true },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("사람 추가")
+                        }
+                        Button(
+                            onClick = { showAddCashSheet = true },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("현금 추가")
+                        }
+                    }
+                }
+                
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "소비 내역",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Button(
+                            onClick = onNavigateToAddExpense,
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("소비 추가")
+                        }
+                    }
+                }
+                
+                if (expenses.isEmpty()) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "소비 내역이 없습니다",
+                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                } else {
+                    items(expenses) { expense ->
+                        ExpenseCard(
+                            expense = expense,
+                            viewModel = viewModel,
+                            currencySymbol = currencySymbol,
+                            onClick = { onNavigateToEditExpense(expense.id) },
+                            onDelete = { viewModel.deleteExpense(expense) }
+                        )
+                    }
                 }
             }
         }
+
+        if (showAddPersonSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showAddPersonSheet = false },
+                sheetState = sheetState
+            ) {
+                AddPersonScreen(
+                    viewModel = viewModel,
+                    onDismiss = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showAddPersonSheet = false
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
+        if (showAddCashSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showAddCashSheet = false },
+                sheetState = sheetState
+            ) {
+                AddCashScreen(
+                    viewModel = viewModel,
+                    onDismiss = {
+                        scope.launch { sheetState.hide() }.invokeOnCompletion {
+                            if (!sheetState.isVisible) {
+                                showAddCashSheet = false
+                            }
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -209,6 +250,7 @@ fun PersonBalanceCard(
     onClick: () -> Unit
 ) {
     var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var editName by remember { mutableStateOf(personWithBalance.person.name) }
     
     Card(
@@ -261,7 +303,7 @@ fun PersonBalanceCard(
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-                IconButton(onClick = onDelete) {
+                IconButton(onClick = { showDeleteDialog = true }) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "삭제",
@@ -303,6 +345,29 @@ fun PersonBalanceCard(
             }
         )
     }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("사람 삭제") },
+            text = { Text("정말로 ${personWithBalance.person.name}님을 삭제하시겠습니까?\n관련된 모든 기록이 삭제됩니다.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
 
 @Composable
@@ -310,47 +375,86 @@ fun ExpenseCard(
     expense: io.github.mbp16.travelmoneynote.data.Expense,
     viewModel: MainViewModel,
     currencySymbol: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val expenseWithPayments by viewModel.getExpenseWithPayments(expense.id).collectAsState(initial = null)
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
         ) {
-            Column {
-                Text(
-                    text = expense.description.ifEmpty { "소비" },
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    text = "${String.format("%,.0f", expense.totalAmount)}$currencySymbol",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Column {
+                    Text(
+                        text = expense.description.ifEmpty { "소비" },
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "${String.format("%,.0f", expense.totalAmount)}$currencySymbol",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                
+                expenseWithPayments?.payments?.forEach { paymentWithPerson ->
+                    Text(
+                        text = "${paymentWithPerson.personName}: ${String.format("%,.0f", paymentWithPerson.payment.amount)}$currencySymbol (${if (paymentWithPerson.payment.method == io.github.mbp16.travelmoneynote.data.PaymentMethod.CASH) "현금" else "카드"})",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                
+                if (expense.photoUri != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "📷 사진 첨부됨",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
-            
-            expenseWithPayments?.payments?.forEach { paymentWithPerson ->
-                Text(
-                    text = "${paymentWithPerson.personName}: ${String.format("%,.0f", paymentWithPerson.payment.amount)}$currencySymbol (${if (paymentWithPerson.payment.method == io.github.mbp16.travelmoneynote.data.PaymentMethod.CASH) "현금" else "카드"})",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            
-            if (expense.photoUri != null) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "📷 사진 첨부됨",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
+
+            IconButton(onClick = { showDeleteDialog = true }) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "삭제",
+                    tint = MaterialTheme.colorScheme.error
                 )
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("소비 내역 삭제") },
+            text = { Text("정말로 이 소비 내역을 삭제하시겠습니까?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete()
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("취소")
+                }
+            }
+        )
     }
 }

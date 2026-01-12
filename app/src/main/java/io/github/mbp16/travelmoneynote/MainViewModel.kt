@@ -121,6 +121,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             personDao.insert(Person(travelId = travelId, name = name))
         }
     }
+
+    fun updatePerson(person: Person) {
+        viewModelScope.launch {
+            personDao.update(person)
+        }
+    }
     
     fun deletePerson(person: Person) {
         viewModelScope.launch {
@@ -137,6 +143,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     description = description
                 )
             )
+        }
+    }
+
+    fun updateCashEntry(cashEntry: CashEntry) {
+        viewModelScope.launch {
+            cashEntryDao.update(cashEntry)
+        }
+    }
+
+    fun deleteCashEntry(cashEntry: CashEntry) {
+        viewModelScope.launch {
+            cashEntryDao.delete(cashEntry)
         }
     }
     
@@ -166,6 +184,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             paymentDao.insertAll(paymentEntities)
+        }
+    }
+
+    fun updateExpenseWithPayments(
+        expenseId: Long,
+        totalAmount: Double,
+        description: String,
+        photoUri: String?,
+        payments: List<Triple<Long, Double, PaymentMethod>>
+    ) {
+        val travelId = _selectedTravelId.value
+        if (travelId <= 0) return
+        viewModelScope.launch {
+            expenseDao.update(
+                Expense(
+                    id = expenseId,
+                    travelId = travelId,
+                    totalAmount = totalAmount,
+                    description = description,
+                    photoUri = photoUri
+                )
+            )
+            paymentDao.deletePaymentsForExpense(expenseId)
+            val paymentEntities = payments.map { (personId, amount, method) ->
+                Payment(
+                    expenseId = expenseId,
+                    personId = personId,
+                    amount = amount,
+                    method = method
+                )
+            }
+            paymentDao.insertAll(paymentEntities)
+        }
+    }
+
+    fun deleteExpense(expense: Expense) {
+        viewModelScope.launch {
+            expenseDao.delete(expense)
         }
     }
     
@@ -208,12 +264,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
-    fun updatePerson(person: Person) {
-        viewModelScope.launch {
-            personDao.update(person)
-        }
-    }
-    
     fun getTransactionsForPerson(personId: Long): Flow<List<TransactionItem>> {
         return combine(
             cashEntryDao.getCashEntriesForPerson(personId),
@@ -244,38 +294,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             (cashTransactions + paymentTransactions).sortedByDescending { it.createdAt }
-        }
-    }
-    
-    fun updateExpenseWithPayments(
-        expenseId: Long,
-        totalAmount: Double,
-        description: String,
-        photoUri: String?,
-        payments: List<Triple<Long, Double, PaymentMethod>>
-    ) {
-        val travelId = _selectedTravelId.value
-        if (travelId <= 0) return
-        viewModelScope.launch {
-            expenseDao.update(
-                Expense(
-                    id = expenseId,
-                    travelId = travelId,
-                    totalAmount = totalAmount,
-                    description = description,
-                    photoUri = photoUri
-                )
-            )
-            paymentDao.deletePaymentsForExpense(expenseId)
-            val paymentEntities = payments.map { (personId, amount, method) ->
-                Payment(
-                    expenseId = expenseId,
-                    personId = personId,
-                    amount = amount,
-                    method = method
-                )
-            }
-            paymentDao.insertAll(paymentEntities)
         }
     }
     

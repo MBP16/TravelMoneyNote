@@ -20,8 +20,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import io.github.mbp16.travelmoneynote.ui.screens.AddCashScreen
-import io.github.mbp16.travelmoneynote.ui.screens.AddPersonScreen
 import io.github.mbp16.travelmoneynote.ui.screens.ExpenseScreen
 import io.github.mbp16.travelmoneynote.ui.screens.HomeScreen
 import io.github.mbp16.travelmoneynote.ui.screens.SettingsScreen
@@ -93,24 +91,10 @@ fun TravelMoneyNoteApp() {
         composable("home") {
             HomeScreen(
                 viewModel = viewModel,
-                onNavigateToAddPerson = { navController.navigate("add_person") },
-                onNavigateToAddCash = { navController.navigate("add_cash") },
                 onNavigateToAddExpense = { navController.navigate("add_expense") },
                 onNavigateToSettings = { navController.navigate("settings") },
                 onNavigateToPersonDetail = { personId -> navController.navigate("person_detail/$personId") },
                 onNavigateToEditExpense = { expenseId -> navController.navigate("edit_expense/$expenseId") }
-            )
-        }
-        composable("add_person") {
-            AddPersonScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable("add_cash") {
-            AddCashScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
             )
         }
         composable("add_expense") {
