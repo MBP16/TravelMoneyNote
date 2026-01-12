@@ -8,6 +8,9 @@ interface TravelDao {
     @Query("SELECT * FROM travels ORDER BY startDate DESC")
     fun getAllTravels(): Flow<List<Travel>>
     
+    @Query("SELECT * FROM travels ORDER BY startDate DESC")
+    suspend fun getAllTravelsOnce(): List<Travel>
+    
     @Query("SELECT * FROM travels WHERE id = :id")
     suspend fun getTravelById(id: Long): Travel?
     
@@ -29,6 +32,9 @@ interface PersonDao {
     @Query("SELECT * FROM persons WHERE travelId = :travelId ORDER BY name")
     fun getPersonsByTravel(travelId: Long): Flow<List<Person>>
     
+    @Query("SELECT * FROM persons WHERE travelId = :travelId ORDER BY name")
+    suspend fun getPersonsByTravelOnce(travelId: Long): List<Person>
+    
     @Insert
     suspend fun insert(person: Person): Long
     
@@ -46,6 +52,9 @@ interface CashEntryDao {
     
     @Query("SELECT * FROM cash_entries WHERE personId = :personId ORDER BY createdAt DESC")
     fun getCashEntriesForPerson(personId: Long): Flow<List<CashEntry>>
+    
+    @Query("SELECT * FROM cash_entries WHERE personId = :personId ORDER BY createdAt DESC")
+    suspend fun getCashEntriesForPersonOnce(personId: Long): List<CashEntry>
     
     @Query("SELECT COALESCE(SUM(amount), 0) FROM cash_entries WHERE personId = :personId")
     fun getTotalCashForPerson(personId: Long): Flow<Double>
@@ -65,6 +74,9 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE travelId = :travelId ORDER BY createdAt DESC")
     fun getExpensesByTravel(travelId: Long): Flow<List<Expense>>
     
+    @Query("SELECT * FROM expenses WHERE travelId = :travelId ORDER BY createdAt DESC")
+    suspend fun getExpensesByTravelOnce(travelId: Long): List<Expense>
+    
     @Insert
     suspend fun insert(expense: Expense): Long
     
@@ -79,6 +91,9 @@ interface ExpenseDao {
 interface PaymentDao {
     @Query("SELECT * FROM payments WHERE expenseId = :expenseId")
     fun getPaymentsForExpense(expenseId: Long): Flow<List<Payment>>
+    
+    @Query("SELECT * FROM payments WHERE expenseId = :expenseId")
+    suspend fun getPaymentsForExpenseOnce(expenseId: Long): List<Payment>
     
     @Query("SELECT * FROM payments WHERE personId = :personId")
     fun getPaymentsForPerson(personId: Long): Flow<List<Payment>>

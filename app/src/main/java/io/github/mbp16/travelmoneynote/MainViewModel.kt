@@ -2,6 +2,7 @@ package io.github.mbp16.travelmoneynote
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.mbp16.travelmoneynote.data.*
@@ -9,6 +10,9 @@ import io.github.mbp16.travelmoneynote.ui.screens.TransactionItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 data class PersonWithBalance(
     val person: Person,
@@ -40,7 +44,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getSharedPreferences("settings", Context.MODE_PRIVATE)
     
     private val _selectedTravelId = MutableStateFlow(prefs.getLong("selectedTravelId", -1L))
+    private val _standardCurrency = MutableStateFlow(prefs.getString("standardCurrency", "KRW") ?: "KRW")
     val selectedTravelId: StateFlow<Long> = _selectedTravelId.asStateFlow()
+    val standardCurrency: StateFlow<String> = _standardCurrency.asStateFlow()
     
     val travels: StateFlow<List<Travel>> = travelDao.getAllTravels()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -163,12 +169,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
-    fun deleteExpense(expense: Expense) {
-        viewModelScope.launch {
-            expenseDao.delete(expense)
-        }
-    }
-    
     fun addTravel(name: String, startDate: Long, endDate: Long, currency: String) {
         viewModelScope.launch {
             val travelId = travelDao.insert(Travel(name = name, startDate = startDate, endDate = endDate, currency = currency))
@@ -194,6 +194,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun selectTravel(travelId: Long) {
         prefs.edit().putLong("selectedTravelId", travelId).apply()
         _selectedTravelId.value = travelId
+    }
+
+    fun setStandardCurrency(currency: String) {
+        prefs.edit().putString("standardCurrency", currency).apply()
+        _standardCurrency.value = currency
     }
     
     fun resetDatabase() {
@@ -271,6 +276,166 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             paymentDao.insertAll(paymentEntities)
+        }
+    }
+    
+    private val json = Json { prettyPrint = true }
+    
+    suspend fun exportDataToJson(): String = withContext(Dispatchers.IO) {
+        val allTravels = travelDao.getAllTravelsOnce()
+        val travelExports = allTravels.map { travel ->
+            val persons = personDao.getPersonsByTravelOnce(travel.id)
+            val personExports = persons.map { person ->
+                val cashEntries = cashEntryDao.getCashEntriesForPersonOnce(person.id)
+                PersonExport(
+                    id = person.id,
+                    name = person.name,
+                    cashEntries = cashEntries.map { entry ->
+                        CashEntryExport(
+                            id = entry.id,
+                            amount = entry.amount,
+                            description = entry.description,
+                            createdAt = entry.createdAt
+                        )
+                    }
+                )
+            }
+            val expenses = expenseDao.getExpensesByTravelOnce(travel.id)
+            val expenseExports = expenses.map { expense ->
+                val payments = paymentDao.getPaymentsForExpenseOnce(expense.id)
+                ExpenseExport(
+                    id = expense.id,
+                    totalAmount = expense.totalAmount,
+                    description = expense.description,
+                    photoUri = expense.photoUri,
+                    createdAt = expense.createdAt,
+                    payments = payments.map { payment ->
+                        PaymentExport(
+                            id = payment.id,
+                            personId = payment.personId,
+                            amount = payment.amount,
+                            method = payment.method.name
+                        )
+                    }
+                )
+            }
+            TravelExport(
+                id = travel.id,
+                name = travel.name,
+                startDate = travel.startDate,
+                endDate = travel.endDate,
+                currency = travel.currency,
+                persons = personExports,
+                expenses = expenseExports
+            )
+        }
+        val exportData = ExportData(
+            travels = travelExports,
+            standardCurrency = _standardCurrency.value
+        )
+        json.encodeToString(exportData)
+    }
+    
+    fun exportToFile(uri: Uri, onComplete: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val jsonData = exportDataToJson()
+                withContext(Dispatchers.IO) {
+                    getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
+                        stream.write(jsonData.toByteArray())
+                    }
+                }
+                onComplete(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onComplete(false)
+            }
+        }
+    }
+    
+    fun importFromFile(uri: Uri, onComplete: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val jsonData = withContext(Dispatchers.IO) {
+                    getApplication<Application>().contentResolver.openInputStream(uri)?.use { stream ->
+                        stream.bufferedReader().readText()
+                    } ?: throw Exception("파일을 읽을 수 없습니다")
+                }
+                val exportData = json.decodeFromString<ExportData>(jsonData)
+                
+                withContext(Dispatchers.IO) {
+                    database.clearAllTables()
+                    
+                    val travelIdMap = mutableMapOf<Long, Long>()
+                    val personIdMap = mutableMapOf<Long, Long>()
+                    
+                    for (travel in exportData.travels) {
+                        val newTravelId = travelDao.insert(
+                            Travel(
+                                name = travel.name,
+                                startDate = travel.startDate,
+                                endDate = travel.endDate,
+                                currency = travel.currency
+                            )
+                        )
+                        travelIdMap[travel.id] = newTravelId
+                        
+                        for (person in travel.persons) {
+                            val newPersonId = personDao.insert(
+                                Person(
+                                    travelId = newTravelId,
+                                    name = person.name
+                                )
+                            )
+                            personIdMap[person.id] = newPersonId
+                            
+                            for (cashEntry in person.cashEntries) {
+                                cashEntryDao.insert(
+                                    CashEntry(
+                                        personId = newPersonId,
+                                        amount = cashEntry.amount,
+                                        description = cashEntry.description,
+                                        createdAt = cashEntry.createdAt
+                                    )
+                                )
+                            }
+                        }
+                        
+                        for (expense in travel.expenses) {
+                            val newExpenseId = expenseDao.insert(
+                                Expense(
+                                    travelId = newTravelId,
+                                    totalAmount = expense.totalAmount,
+                                    description = expense.description,
+                                    photoUri = expense.photoUri,
+                                    createdAt = expense.createdAt
+                                )
+                            )
+                            
+                            for (payment in expense.payments) {
+                                val newPersonId = personIdMap[payment.personId] ?: continue
+                                paymentDao.insert(
+                                    Payment(
+                                        expenseId = newExpenseId,
+                                        personId = newPersonId,
+                                        amount = payment.amount,
+                                        method = PaymentMethod.valueOf(payment.method)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    
+                    prefs.edit().putString("standardCurrency", exportData.standardCurrency).apply()
+                    _standardCurrency.value = exportData.standardCurrency
+                }
+                
+                selectTravel(-1L)
+                onComplete(true, "데이터를 성공적으로 불러왔습니다")
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onComplete(false, "불러오기 실패: ${e.message}")
+            }
         }
     }
 }

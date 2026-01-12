@@ -1,5 +1,8 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.Travel
@@ -48,13 +52,42 @@ fun SettingsScreen(
 ) {
     val travels by viewModel.travels.collectAsState()
     val selectedTravelId by viewModel.selectedTravelId.collectAsState()
+    val standardCurrency by viewModel.standardCurrency.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
+    var settingStandardCurrency by remember { mutableStateOf(false) }
     var showAddTravelDialog by remember { mutableStateOf(false) }
     var showEditTravelDialog by remember { mutableStateOf<Travel?>(null) }
     var showDeleteTravelDialog by remember { mutableStateOf<Travel?>(null) }
+    var showImportConfirmDialog by remember { mutableStateOf(false) }
+    var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
     
+    val context = LocalContext.current
     val dateFormatter = remember { SimpleDateFormat("yyyy.MM.dd", Locale.getDefault()) }
+    val fileNameFormatter = remember { SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()) }
     
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let {
+            viewModel.exportToFile(it) { success ->
+                Toast.makeText(
+                    context,
+                    if (success) "내보내기 완료" else "내보내기 실패",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+    
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            pendingImportUri = it
+            showImportConfirmDialog = true
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -154,12 +187,122 @@ fun SettingsScreen(
             }
             
             item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            item {
+                Text(
+                    text = "기준 화페 설정",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            item {
+                val selectedCurrency = availableCurrencies.find { it.code == standardCurrency }
+                ExposedDropdownMenuBox(
+                    expanded = settingStandardCurrency,
+                    onExpandedChange = { settingStandardCurrency = it }
+                ) {
+                    OutlinedTextField(
+                        value = "${selectedCurrency?.symbol ?: ""} ${selectedCurrency?.name ?: standardCurrency}",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("기준 화폐") },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                            focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = settingStandardCurrency) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = settingStandardCurrency,
+                        onDismissRequest = { settingStandardCurrency = false }
+                    ) {
+                        availableCurrencies.forEach { currencyOption ->
+                            DropdownMenuItem(
+                                text = { Text("${currencyOption.symbol} ${currencyOption.name}") },
+                                onClick = {
+                                    viewModel.setStandardCurrency(currencyOption.code)
+                                    settingStandardCurrency = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
             
             item {
                 Text(
                     text = "데이터 관리",
                     style = MaterialTheme.typography.titleMedium
                 )
+            }
+            
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            val fileName = "travel_money_note_${fileNameFormatter.format(Date())}.json"
+                            exportLauncher.launch(fileName)
+                        }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "파일로 내보내기",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = "모든 데이터를 JSON 파일로 저장합니다",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+            
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            importLauncher.launch(arrayOf("application/json"))
+                        }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "파일에서 불러오기",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = "JSON 파일에서 데이터를 복원합니다",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
             
             item {
@@ -267,6 +410,40 @@ fun SettingsScreen(
             }
         )
     }
+    
+    if (showImportConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { 
+                showImportConfirmDialog = false
+                pendingImportUri = null
+            },
+            title = { Text("데이터 불러오기") },
+            text = { Text("기존 데이터가 모두 삭제되고 파일의 데이터로 대체됩니다.\n계속하시겠습니까?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingImportUri?.let { uri ->
+                            viewModel.importFromFile(uri) { success, message ->
+                                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        showImportConfirmDialog = false
+                        pendingImportUri = null
+                    }
+                ) {
+                    Text("불러오기")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showImportConfirmDialog = false
+                    pendingImportUri = null
+                }) {
+                    Text("취소")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -290,7 +467,7 @@ private fun TravelDialog(
     
     val dateFormatter = remember { SimpleDateFormat("yyyy.MM.dd", Locale.getDefault()) }
     val selectedCurrency = availableCurrencies.find { it.code == currency }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
