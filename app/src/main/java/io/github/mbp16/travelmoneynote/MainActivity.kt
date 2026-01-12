@@ -7,19 +7,25 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.github.mbp16.travelmoneynote.ui.screens.AddCashScreen
-import io.github.mbp16.travelmoneynote.ui.screens.AddExpenseScreen
 import io.github.mbp16.travelmoneynote.ui.screens.AddPersonScreen
+import io.github.mbp16.travelmoneynote.ui.screens.ExpenseScreen
 import io.github.mbp16.travelmoneynote.ui.screens.HomeScreen
 import io.github.mbp16.travelmoneynote.ui.screens.SettingsScreen
 import io.github.mbp16.travelmoneynote.ui.screens.PersonDetailScreen
-import io.github.mbp16.travelmoneynote.ui.screens.EditExpenseScreen
 import io.github.mbp16.travelmoneynote.ui.theme.TravelMoneyNoteTheme
 
 class MainActivity : ComponentActivity() {
@@ -28,7 +34,12 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TravelMoneyNoteTheme {
-                TravelMoneyNoteApp()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    TravelMoneyNoteApp()
+                }
             }
         }
     }
@@ -51,7 +62,34 @@ fun TravelMoneyNoteApp() {
         permissionLauncher.launch(Manifest.permission.CAMERA)
     }
     
-    NavHost(navController = navController, startDestination = "home") {
+    NavHost(
+        navController = navController,
+        startDestination = "home",
+        enterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = tween(300)
+            )
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { -it },
+                animationSpec = tween(300)
+            )
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                initialOffsetX = { -it },
+                animationSpec = tween(300)
+            )
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(300)
+            )
+        }
+    ) {
         composable("home") {
             HomeScreen(
                 viewModel = viewModel,
@@ -76,7 +114,7 @@ fun TravelMoneyNoteApp() {
             )
         }
         composable("add_expense") {
-            AddExpenseScreen(
+            ExpenseScreen(
                 viewModel = viewModel,
                 onNavigateBack = { navController.popBackStack() }
             )
@@ -97,7 +135,7 @@ fun TravelMoneyNoteApp() {
         }
         composable("edit_expense/{expenseId}") { backStackEntry ->
             val expenseId = backStackEntry.arguments?.getString("expenseId")?.toLongOrNull() ?: 0L
-            EditExpenseScreen(
+            ExpenseScreen(
                 viewModel = viewModel,
                 expenseId = expenseId,
                 onNavigateBack = { navController.popBackStack() }

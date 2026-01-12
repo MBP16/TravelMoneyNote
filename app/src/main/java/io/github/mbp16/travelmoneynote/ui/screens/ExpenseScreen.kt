@@ -30,28 +30,39 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+data class PaymentEntry(
+    val person: Person?,
+    val amount: String,
+    val method: PaymentMethod
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditExpenseScreen(
+fun ExpenseScreen(
     viewModel: MainViewModel,
-    expenseId: Long,
+    expenseId: Long? = null,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
     val persons by viewModel.persons.collectAsState()
-    val expenseWithPayments by viewModel.getExpenseWithPayments(expenseId).collectAsState(initial = null)
     
+    // Edit Mode State
+    val expenseWithPayments = if (expenseId != null) {
+        viewModel.getExpenseWithPayments(expenseId).collectAsState(initial = null).value
+    } else null
+
     var description by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     var tempPhotoUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var payments by remember { mutableStateOf(listOf(PaymentEntry(null, "", PaymentMethod.CASH))) }
     var isInitialized by remember { mutableStateOf(false) }
-    
+
+    // Initialize state if editing
     LaunchedEffect(expenseWithPayments, persons) {
-        if (!isInitialized && expenseWithPayments != null && persons.isNotEmpty()) {
-            description = expenseWithPayments!!.expense.description
-            photoUri = expenseWithPayments!!.expense.photoUri?.let { Uri.parse(it) }
-            payments = expenseWithPayments!!.payments.map { pwp ->
+        if (!isInitialized && expenseId != null && expenseWithPayments != null && persons.isNotEmpty()) {
+            description = expenseWithPayments.expense.description
+            photoUri = expenseWithPayments.expense.photoUri?.let { Uri.parse(it) }
+            payments = expenseWithPayments.payments.map { pwp ->
                 PaymentEntry(
                     person = persons.find { it.id == pwp.payment.personId },
                     amount = pwp.payment.amount.toString(),
@@ -102,7 +113,7 @@ fun EditExpenseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("소비 수정") },
+                title = { Text(if (expenseId == null) "소비 추가" else "소비 수정") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
@@ -161,7 +172,7 @@ fun EditExpenseScreen(
                 }
             } else {
                 itemsIndexed(payments) { index, payment ->
-                    EditPaymentEntryCard(
+                    PaymentEntryCard(
                         payment = payment,
                         persons = persons,
                         onPaymentChange = { newPayment ->
@@ -261,18 +272,32 @@ fun EditExpenseScreen(
                 Button(
                     onClick = {
                         if (isValid) {
-                            viewModel.updateExpenseWithPayments(
-                                expenseId = expenseId,
-                                totalAmount = totalAmount,
-                                description = description.trim(),
-                                photoUri = photoUri?.toString(),
-                                payments = payments.mapNotNull { payment ->
-                                    payment.person?.let { person ->
-                                        val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
-                                        Triple(person.id, amount, payment.method)
+                            if (expenseId == null) {
+                                viewModel.addExpenseWithPayments(
+                                    totalAmount = totalAmount,
+                                    description = description.trim(),
+                                    photoUri = photoUri?.toString(),
+                                    payments = payments.mapNotNull { payment ->
+                                        payment.person?.let { person ->
+                                            val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
+                                            Triple(person.id, amount, payment.method)
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            } else {
+                                viewModel.updateExpenseWithPayments(
+                                    expenseId = expenseId,
+                                    totalAmount = totalAmount,
+                                    description = description.trim(),
+                                    photoUri = photoUri?.toString(),
+                                    payments = payments.mapNotNull { payment ->
+                                        payment.person?.let { person ->
+                                            val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
+                                            Triple(person.id, amount, payment.method)
+                                        }
+                                    }
+                                )
+                            }
                             onNavigateBack()
                         }
                     },
@@ -288,7 +313,7 @@ fun EditExpenseScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditPaymentEntryCard(
+fun PaymentEntryCard(
     payment: PaymentEntry,
     persons: List<Person>,
     onPaymentChange: (PaymentEntry) -> Unit,
