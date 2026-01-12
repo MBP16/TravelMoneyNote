@@ -154,10 +154,22 @@ fun HomeScreen(
             
             item {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "소비 내역",
-                    style = MaterialTheme.typography.titleLarge
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "소비 내역",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Button(
+                        onClick = onNavigateToAddExpense,
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("소비 추가")
+                    }
+                }
             }
             
             if (expenses.isEmpty()) {
@@ -180,17 +192,6 @@ fun HomeScreen(
                         currencySymbol = currencySymbol,
                         onClick = { onNavigateToEditExpense(expense.id) }
                     )
-                }
-            }
-            
-            item {
-                Button(
-                    onClick = onNavigateToAddExpense,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("소비 추가")
                 }
             }
         }

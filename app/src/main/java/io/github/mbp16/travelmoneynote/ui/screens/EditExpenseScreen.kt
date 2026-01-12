@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -42,6 +43,7 @@ fun EditExpenseScreen(
     
     var description by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var tempPhotoUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var payments by remember { mutableStateOf(listOf(PaymentEntry(null, "", PaymentMethod.CASH))) }
     var isInitialized by remember { mutableStateOf(false) }
     
@@ -79,8 +81,8 @@ fun EditExpenseScreen(
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (!success) {
-            photoUri = null
+        if (success) {
+            photoUri = tempPhotoUri
         }
     }
     
@@ -207,8 +209,8 @@ fun EditExpenseScreen(
                 ) {
                     OutlinedButton(
                         onClick = {
-                            photoUri = createImageFile()
-                            cameraLauncher.launch(photoUri!!)
+                            tempPhotoUri = createImageFile()
+                            cameraLauncher.launch(tempPhotoUri!!)
                         },
                         modifier = Modifier.weight(1f)
                     ) {
