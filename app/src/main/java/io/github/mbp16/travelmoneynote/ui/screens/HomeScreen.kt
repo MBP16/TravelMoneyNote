@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.PersonWithBalance
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +43,10 @@ fun HomeScreen(
     var showAddCashSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
+
+    val groupedExpenses = remember(expenses) {
+        expenses.groupBy { formatDate(it.createdAt) }
+    }
     
     Scaffold(
         topBar = {
@@ -190,14 +197,24 @@ fun HomeScreen(
                         }
                     }
                 } else {
-                    items(expenses) { expense ->
-                        ExpenseCard(
-                            expense = expense,
-                            viewModel = viewModel,
-                            currencySymbol = currencySymbol,
-                            onClick = { onNavigateToEditExpense(expense.id) },
-                            onDelete = { viewModel.deleteExpense(expense) }
-                        )
+                    groupedExpenses.forEach { (date, dailyExpenses) ->
+                        item {
+                            Text(
+                                text = date,
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                        items(dailyExpenses) { expense ->
+                            ExpenseCard(
+                                expense = expense,
+                                viewModel = viewModel,
+                                currencySymbol = currencySymbol,
+                                onClick = { onNavigateToEditExpense(expense.id) },
+                                onDelete = { viewModel.deleteExpense(expense) }
+                            )
+                        }
                     }
                 }
             }
@@ -397,10 +414,22 @@ fun ExpenseCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Column {
-                    Text(
-                        text = expense.description.ifEmpty { "소비" },
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = expense.description.ifEmpty { "소비" },
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = formatTime(expense.createdAt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Text(
                         text = "${String.format("%,.0f", expense.totalAmount)}$currencySymbol",
                         style = MaterialTheme.typography.headlineSmall,
@@ -457,4 +486,14 @@ fun ExpenseCard(
             }
         )
     }
+}
+
+private fun formatDate(timestamp: Long): String {
+    val sdf = SimpleDateFormat("yyyy년 MM월 dd일 EEEE", Locale.KOREA)
+    return sdf.format(Date(timestamp))
+}
+
+private fun formatTime(timestamp: Long): String {
+    val sdf = SimpleDateFormat("a h:mm", Locale.KOREA)
+    return sdf.format(Date(timestamp))
 }
