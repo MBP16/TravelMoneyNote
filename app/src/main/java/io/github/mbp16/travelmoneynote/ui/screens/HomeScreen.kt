@@ -31,13 +31,26 @@ fun HomeScreen(
     val personsWithBalance by viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
     val expenses by viewModel.expenses.collectAsState()
     val currentCurrency by viewModel.currentCurrency.collectAsState()
+    val selectedTravelId by viewModel.selectedTravelId.collectAsState()
+    val travels by viewModel.travels.collectAsState()
     
     val currencySymbol = availableCurrencies.find { it.code == currentCurrency }?.symbol ?: "₩"
+    val selectedTravel = travels.find { it.id == selectedTravelId }
     
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("여행 가계부") }
+                title = { 
+                    Column {
+                        Text("여행 가계부")
+                        if (selectedTravel != null) {
+                            Text(
+                                text = selectedTravel.name,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -48,7 +61,34 @@ fun HomeScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
+        if (selectedTravelId <= 0) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text(
+                        text = "여행을 선택해주세요",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = "설정에서 여행을 추가하고 선택할 수 있습니다",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Button(onClick = onNavigateToSettings) {
+                        Icon(Icons.Default.Settings, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("설정으로 이동")
+                    }
+                }
+            }
+        } else {
+            LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -153,6 +193,7 @@ fun HomeScreen(
                     Text("소비 추가")
                 }
             }
+        }
         }
     }
 }

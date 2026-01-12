@@ -4,9 +4,30 @@ import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
+interface TravelDao {
+    @Query("SELECT * FROM travels ORDER BY startDate DESC")
+    fun getAllTravels(): Flow<List<Travel>>
+    
+    @Query("SELECT * FROM travels WHERE id = :id")
+    suspend fun getTravelById(id: Long): Travel?
+    
+    @Insert
+    suspend fun insert(travel: Travel): Long
+    
+    @Update
+    suspend fun update(travel: Travel)
+    
+    @Delete
+    suspend fun delete(travel: Travel)
+}
+
+@Dao
 interface PersonDao {
     @Query("SELECT * FROM persons ORDER BY name")
     fun getAllPersons(): Flow<List<Person>>
+    
+    @Query("SELECT * FROM persons WHERE travelId = :travelId ORDER BY name")
+    fun getPersonsByTravel(travelId: Long): Flow<List<Person>>
     
     @Insert
     suspend fun insert(person: Person): Long
@@ -40,6 +61,9 @@ interface CashEntryDao {
 interface ExpenseDao {
     @Query("SELECT * FROM expenses ORDER BY createdAt DESC")
     fun getAllExpenses(): Flow<List<Expense>>
+    
+    @Query("SELECT * FROM expenses WHERE travelId = :travelId ORDER BY createdAt DESC")
+    fun getExpensesByTravel(travelId: Long): Flow<List<Expense>>
     
     @Insert
     suspend fun insert(expense: Expense): Long

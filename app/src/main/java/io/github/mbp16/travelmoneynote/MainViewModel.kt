@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.mbp16.travelmoneynote.data.*
 import io.github.mbp16.travelmoneynote.ui.screens.TransactionItem
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -30,6 +31,7 @@ data class PaymentWithPerson(
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
+    private val travelDao = database.travelDao()
     private val personDao = database.personDao()
     private val cashEntryDao = database.cashEntryDao()
     private val expenseDao = database.expenseDao()
@@ -37,14 +39,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     
     private val prefs = application.getSharedPreferences("settings", Context.MODE_PRIVATE)
     
-    private val _currentCurrency = MutableStateFlow(prefs.getString("currency", "KRW") ?: "KRW")
-    val currentCurrency: StateFlow<String> = _currentCurrency.asStateFlow()
+    private val _selectedTravelId = MutableStateFlow(prefs.getLong("selectedTravelId", -1L))
+    val selectedTravelId: StateFlow<Long> = _selectedTravelId.asStateFlow()
     
-    val persons: StateFlow<List<Person>> = personDao.getAllPersons()
+    val travels: StateFlow<List<Travel>> = travelDao.getAllTravels()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     
-    val expenses: StateFlow<List<Expense>> = expenseDao.getAllExpenses()
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    val currentCurrency: StateFlow<String> = combine(travels, _selectedTravelId) { travelList, travelId ->
+        travelList.find { it.id == travelId }?.currency ?: "KRW"
+    }.stateIn(viewModelScope, SharingStarted.Lazily, "KRW")
+    
+    val persons: StateFlow<List<Person>> = _selectedTravelId.flatMapLatest { travelId ->
+        if (travelId > 0) {
+            personDao.getPersonsByTravel(travelId)
+        } else {
+            flowOf(emptyList())
+        }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    
+    val expenses: StateFlow<List<Expense>> = _selectedTravelId.flatMapLatest { travelId ->
+        if (travelId > 0) {
+            expenseDao.getExpensesByTravel(travelId)
+        } else {
+            flowOf(emptyList())
+        }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     
     val cashEntries: StateFlow<List<CashEntry>> = cashEntryDao.getAllCashEntries()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -90,8 +109,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun addPerson(name: String) {
+        val travelId = _selectedTravelId.value
+        if (travelId <= 0) return
         viewModelScope.launch {
-            personDao.insert(Person(name = name))
+            personDao.insert(Person(travelId = travelId, name = name))
         }
     }
     
@@ -119,9 +140,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         photoUri: String?,
         payments: List<Triple<Long, Double, PaymentMethod>>
     ) {
+        val travelId = _selectedTravelId.value
+        if (travelId <= 0) return
         viewModelScope.launch {
             val expenseId = expenseDao.insert(
                 Expense(
+                    travelId = travelId,
                     totalAmount = totalAmount,
                     description = description,
                     photoUri = photoUri
@@ -145,14 +169,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
-    fun setCurrency(currencyCode: String) {
-        prefs.edit().putString("currency", currencyCode).apply()
-        _currentCurrency.value = currencyCode
+    fun addTravel(name: String, startDate: Long, endDate: Long, currency: String) {
+        viewModelScope.launch {
+            val travelId = travelDao.insert(Travel(name = name, startDate = startDate, endDate = endDate, currency = currency))
+            selectTravel(travelId)
+        }
+    }
+    
+    fun updateTravel(travel: Travel) {
+        viewModelScope.launch {
+            travelDao.update(travel)
+        }
+    }
+    
+    fun deleteTravel(travel: Travel) {
+        viewModelScope.launch {
+            travelDao.delete(travel)
+            if (_selectedTravelId.value == travel.id) {
+                selectTravel(-1L)
+            }
+        }
+    }
+    
+    fun selectTravel(travelId: Long) {
+        prefs.edit().putLong("selectedTravelId", travelId).apply()
+        _selectedTravelId.value = travelId
     }
     
     fun resetDatabase() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             database.clearAllTables()
+            selectTravel(-1L)
         }
     }
     
@@ -202,10 +249,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         photoUri: String?,
         payments: List<Triple<Long, Double, PaymentMethod>>
     ) {
+        val travelId = _selectedTravelId.value
+        if (travelId <= 0) return
         viewModelScope.launch {
             expenseDao.update(
                 Expense(
                     id = expenseId,
+                    travelId = travelId,
                     totalAmount = totalAmount,
                     description = description,
                     photoUri = photoUri

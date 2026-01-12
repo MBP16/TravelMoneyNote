@@ -5,10 +5,32 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "persons")
+@Entity(tableName = "travels")
+data class Travel(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val name: String,
+    val startDate: Long,
+    val endDate: Long,
+    val currency: String = "KRW"
+)
+
+@Entity(
+    tableName = "persons",
+    foreignKeys = [
+        ForeignKey(
+            entity = Travel::class,
+            parentColumns = ["id"],
+            childColumns = ["travelId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("travelId")]
+)
 data class Person(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val travelId: Long,
     val name: String
 )
 
@@ -33,10 +55,22 @@ data class CashEntry(
     val createdAt: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "expenses")
+@Entity(
+    tableName = "expenses",
+    foreignKeys = [
+        ForeignKey(
+            entity = Travel::class,
+            parentColumns = ["id"],
+            childColumns = ["travelId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("travelId")]
+)
 data class Expense(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val travelId: Long,
     val totalAmount: Double,
     val description: String = "",
     val photoUri: String? = null,
