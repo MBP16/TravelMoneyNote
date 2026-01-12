@@ -431,7 +431,7 @@ fun ExpenseCard(
                         )
                     }
                     Text(
-                        text = "${String.format("%,.0f", expense.totalAmount)}$currencySymbol",
+                        text = "${if (expense.totalAmount % 1.0 == 0.0) expense.totalAmount.toInt() else expense.totalAmount}$currencySymbol",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.primary
                     )

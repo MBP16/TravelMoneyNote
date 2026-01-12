@@ -45,6 +45,8 @@ fun ExpenseScreen(
 ) {
     val context = LocalContext.current
     val persons by viewModel.persons.collectAsState()
+    val currentCurrency by viewModel.currentCurrency.collectAsState()
+    val currencySymbol = availableCurrencies.find { it.code == currentCurrency }?.symbol ?: "₩"
     
     // Edit Mode State
     val expenseWithPayments = if (expenseId != null) {
@@ -188,7 +190,7 @@ fun ExpenseScreen(
                         modifier = Modifier.padding(16.dp)
                     ) {
                         Text(
-                            text = "총 금액: ${String.format("%,.0f", totalAmount)}원",
+                        text = "총 금액: ${if (totalAmount % 1.0 == 0.0) totalAmount.toInt() else totalAmount}$currencySymbol",
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -228,7 +230,8 @@ fun ExpenseScreen(
                                 }
                             }
                         },
-                        canDelete = payments.size > 1
+                        canDelete = payments.size > 1,
+                        currencySymbol = currencySymbol
                     )
                 }
                 
@@ -328,7 +331,8 @@ fun PaymentEntryCard(
     persons: List<Person>,
     onPaymentChange: (PaymentEntry) -> Unit,
     onDelete: () -> Unit,
-    canDelete: Boolean
+    canDelete: Boolean,
+    currencySymbol: String
 ) {
     var personExpanded by remember { mutableStateOf(false) }
     var methodExpanded by remember { mutableStateOf(false) }
@@ -394,7 +398,7 @@ fun PaymentEntryCard(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
-                suffix = { Text("원") }
+                suffix = { Text(currencySymbol) }
             )
             
             ExposedDropdownMenuBox(

@@ -17,10 +17,12 @@ fun AddCashScreen(
     onDismiss: () -> Unit
 ) {
     val persons by viewModel.persons.collectAsState()
+    val currentCurrency by viewModel.currentCurrency.collectAsState()
     var selectedPerson by remember { mutableStateOf<Person?>(null) }
     var amount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    val currencySymbol = availableCurrencies.find { it.code == currentCurrency }?.symbol ?: "₩"
     
     LaunchedEffect(persons) {
         if (selectedPerson == null && persons.isNotEmpty()) {
@@ -84,7 +86,7 @@ fun AddCashScreen(
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
-                suffix = { Text("원") }
+                suffix = { Text(currencySymbol) }
             )
             
             OutlinedTextField(
