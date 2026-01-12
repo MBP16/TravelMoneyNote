@@ -51,6 +51,7 @@ fun ExpenseScreen(
         viewModel.getExpenseWithPayments(expenseId).collectAsState(initial = null).value
     } else null
 
+    var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     var tempPhotoUri by rememberSaveable { mutableStateOf<Uri?>(null) }
@@ -60,6 +61,7 @@ fun ExpenseScreen(
     // Initialize state if editing
     LaunchedEffect(expenseWithPayments, persons) {
         if (!isInitialized && expenseId != null && expenseWithPayments != null && persons.isNotEmpty()) {
+            title = expenseWithPayments.expense.title
             description = expenseWithPayments.expense.description
             photoUri = expenseWithPayments.expense.photoUri?.let { Uri.parse(it) }
             payments = expenseWithPayments.payments.map { pwp ->
@@ -109,6 +111,40 @@ fun ExpenseScreen(
     
     val totalAmount = payments.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
     val isValid = payments.all { it.person != null && (it.amount.toDoubleOrNull() ?: 0.0) > 0 } && payments.isNotEmpty()
+
+    val onSave = {
+        if (isValid) {
+            if (expenseId == null) {
+                viewModel.addExpenseWithPayments(
+                    title = title.trim(),
+                    totalAmount = totalAmount,
+                    description = description.trim(),
+                    photoUri = photoUri?.toString(),
+                    payments = payments.mapNotNull { payment ->
+                        payment.person?.let { person ->
+                            val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
+                            Triple(person.id, amount, payment.method)
+                        }
+                    }
+                )
+            } else {
+                viewModel.updateExpenseWithPayments(
+                    expenseId = expenseId,
+                    title = title.trim(),
+                    totalAmount = totalAmount,
+                    description = description.trim(),
+                    photoUri = photoUri?.toString(),
+                    payments = payments.mapNotNull { payment ->
+                        payment.person?.let { person ->
+                            val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
+                            Triple(person.id, amount, payment.method)
+                        }
+                    }
+                )
+            }
+            onNavigateBack()
+        }
+    }
     
     Scaffold(
         topBar = {
@@ -117,6 +153,11 @@ fun ExpenseScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
+                    }
+                },
+                actions = {
+                    TextButton(onClick = onSave, enabled = isValid) {
+                        Text("저장")
                     }
                 }
             )
@@ -131,9 +172,9 @@ fun ExpenseScreen(
         ) {
             item {
                 OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("설명") },
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("제목") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -266,46 +307,15 @@ fun ExpenseScreen(
                     }
                 }
             }
-            
+
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = {
-                        if (isValid) {
-                            if (expenseId == null) {
-                                viewModel.addExpenseWithPayments(
-                                    totalAmount = totalAmount,
-                                    description = description.trim(),
-                                    photoUri = photoUri?.toString(),
-                                    payments = payments.mapNotNull { payment ->
-                                        payment.person?.let { person ->
-                                            val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
-                                            Triple(person.id, amount, payment.method)
-                                        }
-                                    }
-                                )
-                            } else {
-                                viewModel.updateExpenseWithPayments(
-                                    expenseId = expenseId,
-                                    totalAmount = totalAmount,
-                                    description = description.trim(),
-                                    photoUri = photoUri?.toString(),
-                                    payments = payments.mapNotNull { payment ->
-                                        payment.person?.let { person ->
-                                            val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
-                                            Triple(person.id, amount, payment.method)
-                                        }
-                                    }
-                                )
-                            }
-                            onNavigateBack()
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = isValid
-                ) {
-                    Text("저장")
-                }
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("설명 (선택)") },
+                    modifier = Modifier.fillMaxWidth().height(300.dp),
+                    singleLine = false
+                )
             }
         }
     }

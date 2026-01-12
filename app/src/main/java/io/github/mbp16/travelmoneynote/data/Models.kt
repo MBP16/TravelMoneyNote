@@ -71,6 +71,7 @@ data class Expense(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val travelId: Long,
+    val title: String = "",
     val totalAmount: Double,
     val description: String = "",
     val photoUri: String? = null,

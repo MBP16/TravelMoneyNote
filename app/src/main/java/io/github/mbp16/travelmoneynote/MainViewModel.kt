@@ -159,6 +159,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun addExpenseWithPayments(
+        title: String,
         totalAmount: Double,
         description: String,
         photoUri: String?,
@@ -170,6 +171,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val expenseId = expenseDao.insert(
                 Expense(
                     travelId = travelId,
+                    title = title,
                     totalAmount = totalAmount,
                     description = description,
                     photoUri = photoUri
@@ -189,6 +191,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateExpenseWithPayments(
         expenseId: Long,
+        title: String,
         totalAmount: Double,
         description: String,
         photoUri: String?,
@@ -201,6 +204,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 Expense(
                     id = expenseId,
                     travelId = travelId,
+                    title = title,
                     totalAmount = totalAmount,
                     description = description,
                     photoUri = photoUri
@@ -287,7 +291,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         id = payment.id,
                         amount = payment.amount,
                         isPositive = false,
-                        description = expense.description,
+                        description = expense.title,
                         type = if (payment.method == PaymentMethod.CASH) "현금 결제" else "카드 결제",
                         createdAt = expense.createdAt
                     )
@@ -323,6 +327,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val payments = paymentDao.getPaymentsForExpenseOnce(expense.id)
                 ExpenseExport(
                     id = expense.id,
+                    title = expense.title,
                     totalAmount = expense.totalAmount,
                     description = expense.description,
                     photoUri = expense.photoUri,
@@ -423,6 +428,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             val newExpenseId = expenseDao.insert(
                                 Expense(
                                     travelId = newTravelId,
+                                    title = expense.title,
                                     totalAmount = expense.totalAmount,
                                     description = expense.description,
                                     photoUri = expense.photoUri,

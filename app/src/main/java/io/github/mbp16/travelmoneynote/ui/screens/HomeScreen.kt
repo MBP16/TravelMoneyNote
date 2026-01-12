@@ -419,7 +419,7 @@ fun ExpenseCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = expense.description.ifEmpty { "소비" },
+                            text = expense.title.ifBlank { "소비" },
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f, fill = false)
                         )

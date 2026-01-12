@@ -39,6 +39,7 @@ data class CashEntryExport(
 @Serializable
 data class ExpenseExport(
     val id: Long,
+    val title: String = "",
     val totalAmount: Double,
     val description: String,
     val photoUri: String?,
