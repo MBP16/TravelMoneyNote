@@ -48,12 +48,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val selectedTravelId: StateFlow<Long> = _selectedTravelId.asStateFlow()
     val standardCurrency: StateFlow<String> = _standardCurrency.asStateFlow()
     
+    // Exchange rate service
+    private val exchangeRateService = ExchangeRateService()
+    private val _exchangeRates = MutableStateFlow<ExchangeRates?>(null)
+    val exchangeRates: StateFlow<ExchangeRates?> = _exchangeRates.asStateFlow()
+    
     val travels: StateFlow<List<Travel>> = travelDao.getAllTravels()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     
     val currentCurrency: StateFlow<String> = combine(travels, _selectedTravelId) { travelList, travelId ->
         travelList.find { it.id == travelId }?.currency ?: "KRW"
     }.stateIn(viewModelScope, SharingStarted.Lazily, "KRW")
+    
+    init {
+        // Fetch exchange rates when currencies change
+        viewModelScope.launch {
+            combine(currentCurrency, _standardCurrency) { current, standard ->
+                Pair(current, standard)
+            }.collect { (currentCurr, standardCurr) ->
+                if (currentCurr != standardCurr) {
+                    refreshExchangeRates(standardCurr)
+                }
+            }
+        }
+    }
+    
+    fun refreshExchangeRates(baseCurrency: String = _standardCurrency.value) {
+        viewModelScope.launch {
+            _exchangeRates.value = exchangeRateService.getExchangeRates(baseCurrency)
+        }
+    }
+    
+    fun convertToStandardCurrency(amount: Double, fromCurrency: String): Double? {
+        val standardCurr = _standardCurrency.value
+        if (fromCurrency == standardCurr) return amount
+        return exchangeRateService.convertAmount(amount, fromCurrency, standardCurr, _exchangeRates.value)
+    }
     
     val persons: StateFlow<List<Person>> = _selectedTravelId.flatMapLatest { travelId ->
         if (travelId > 0) {

@@ -46,7 +46,11 @@ fun ExpenseScreen(
     val context = LocalContext.current
     val persons by viewModel.persons.collectAsState()
     val currentCurrency by viewModel.currentCurrency.collectAsState()
+    val standardCurrency by viewModel.standardCurrency.collectAsState()
+    val exchangeRates by viewModel.exchangeRates.collectAsState()
     val currencySymbol = availableCurrencies.find { it.code == currentCurrency }?.symbol ?: "₩"
+    val standardCurrencySymbol = availableCurrencies.find { it.code == standardCurrency }?.symbol ?: "₩"
+    val showConversion = currentCurrency != standardCurrency && exchangeRates != null
     
     // Edit Mode State
     val expenseWithPayments = if (expenseId != null) {
@@ -189,8 +193,15 @@ fun ExpenseScreen(
                     Column(
                         modifier = Modifier.padding(16.dp)
                     ) {
+                        val baseText = "총 금액: ${if (totalAmount % 1.0 == 0.0) totalAmount.toInt() else totalAmount}$currencySymbol"
+                        val displayText = if (showConversion) {
+                            val converted = viewModel.convertToStandardCurrency(totalAmount, currentCurrency)
+                            if (converted != null) {
+                                "$baseText (${String.format("%,.0f", converted)}$standardCurrencySymbol)"
+                            } else baseText
+                        } else baseText
                         Text(
-                        text = "총 금액: ${if (totalAmount % 1.0 == 0.0) totalAmount.toInt() else totalAmount}$currencySymbol",
+                            text = displayText,
                             style = MaterialTheme.typography.headlineSmall,
                             color = MaterialTheme.colorScheme.primary
                         )

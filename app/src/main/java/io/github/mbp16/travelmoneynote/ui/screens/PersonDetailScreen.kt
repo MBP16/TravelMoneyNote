@@ -36,9 +36,22 @@ fun PersonDetailScreen(
     val personWithBalance = personsWithBalance.find { it.person.id == personId }
     val transactions by viewModel.getTransactionsForPerson(personId).collectAsState(initial = emptyList())
     val currentCurrency by viewModel.currentCurrency.collectAsState()
+    val standardCurrency by viewModel.standardCurrency.collectAsState()
+    val exchangeRates by viewModel.exchangeRates.collectAsState()
     
     val currencySymbol = availableCurrencies.find { it.code == currentCurrency }?.symbol ?: "₩"
+    val standardCurrencySymbol = availableCurrencies.find { it.code == standardCurrency }?.symbol ?: "₩"
+    val showConversion = currentCurrency != standardCurrency && exchangeRates != null
     val dateFormat = remember { SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()) }
+    
+    fun formatWithConversion(amount: Double): String {
+        val base = "${String.format("%,.0f", amount)}$currencySymbol"
+        if (!showConversion) return base
+        val converted = viewModel.convertToStandardCurrency(amount, currentCurrency)
+        return if (converted != null) {
+            "$base (${String.format("%,.0f", converted)}$standardCurrencySymbol)"
+        } else base
+    }
     
     var transactionToDelete by remember { mutableStateOf<TransactionItem?>(null) }
     var transactionToEdit by remember { mutableStateOf<TransactionItem?>(null) }
@@ -162,7 +175,7 @@ fun PersonDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text("보유 현금")
-                                Text("${String.format("%,.0f", pwb.totalCash)}$currencySymbol")
+                                Text(formatWithConversion(pwb.totalCash))
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -170,7 +183,7 @@ fun PersonDetailScreen(
                             ) {
                                 Text("현금 사용")
                                 Text(
-                                    "-${String.format("%,.0f", pwb.cashSpent)}$currencySymbol",
+                                    "-${formatWithConversion(pwb.cashSpent)}",
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -180,7 +193,7 @@ fun PersonDetailScreen(
                             ) {
                                 Text("카드 사용")
                                 Text(
-                                    "-${String.format("%,.0f", pwb.cardSpent)}$currencySymbol",
+                                    "-${formatWithConversion(pwb.cardSpent)}",
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -194,7 +207,7 @@ fun PersonDetailScreen(
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    "${String.format("%,.0f", pwb.remainingCash)}$currencySymbol",
+                                    formatWithConversion(pwb.remainingCash),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = if (pwb.remainingCash < 0)
                                         MaterialTheme.colorScheme.error
@@ -247,7 +260,7 @@ fun PersonDetailScreen(
                                     )
                                 }
                                 Text(
-                                    text = "${if (transaction.isPositive) "+" else "-"}${String.format("%,.0f", transaction.amount)}$currencySymbol",
+                                    text = "${if (transaction.isPositive) "+" else "-"}${formatWithConversion(transaction.amount)}",
                                     style = MaterialTheme.typography.titleMedium,
                                     color = if (transaction.isPositive)
                                         MaterialTheme.colorScheme.primary

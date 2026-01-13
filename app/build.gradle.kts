@@ -67,6 +67,9 @@ dependencies {
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
     
+    // OkHttp for network calls
+    implementation(libs.okhttp)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

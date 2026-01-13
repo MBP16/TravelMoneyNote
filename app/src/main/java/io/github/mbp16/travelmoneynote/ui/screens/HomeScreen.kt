@@ -33,10 +33,14 @@ fun HomeScreen(
     val personsWithBalance by viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
     val expenses by viewModel.expenses.collectAsState()
     val currentCurrency by viewModel.currentCurrency.collectAsState()
+    val standardCurrency by viewModel.standardCurrency.collectAsState()
+    val exchangeRates by viewModel.exchangeRates.collectAsState()
     val selectedTravelId by viewModel.selectedTravelId.collectAsState()
     val travels by viewModel.travels.collectAsState()
     
     val currencySymbol = availableCurrencies.find { it.code == currentCurrency }?.symbol ?: "₩"
+    val standardCurrencySymbol = availableCurrencies.find { it.code == standardCurrency }?.symbol ?: "₩"
+    val showConversion = currentCurrency != standardCurrency && exchangeRates != null
     val selectedTravel = travels.find { it.id == selectedTravelId }
 
     var showAddPersonSheet by remember { mutableStateOf(false) }
@@ -130,6 +134,9 @@ fun HomeScreen(
                         PersonBalanceCard(
                             personWithBalance = personWithBalance,
                             currencySymbol = currencySymbol,
+                            standardCurrencySymbol = standardCurrencySymbol,
+                            showConversion = showConversion,
+                            convertToStandard = { amount -> viewModel.convertToStandardCurrency(amount, currentCurrency) },
                             onDelete = { viewModel.deletePerson(personWithBalance.person) },
                             onEdit = { newName -> 
                                 viewModel.updatePerson(personWithBalance.person.copy(name = newName))
@@ -211,6 +218,9 @@ fun HomeScreen(
                                 expense = expense,
                                 viewModel = viewModel,
                                 currencySymbol = currencySymbol,
+                                standardCurrencySymbol = standardCurrencySymbol,
+                                showConversion = showConversion,
+                                convertToStandard = { amount -> viewModel.convertToStandardCurrency(amount, currentCurrency) },
                                 onClick = { onNavigateToEditExpense(expense.id) },
                                 onDelete = { viewModel.deleteExpense(expense) }
                             )
@@ -262,6 +272,9 @@ fun HomeScreen(
 fun PersonBalanceCard(
     personWithBalance: PersonWithBalance,
     currencySymbol: String,
+    standardCurrencySymbol: String = currencySymbol,
+    showConversion: Boolean = false,
+    convertToStandard: (Double) -> Double? = { null },
     onDelete: () -> Unit,
     onEdit: (String) -> Unit,
     onClick: () -> Unit
@@ -269,6 +282,15 @@ fun PersonBalanceCard(
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var editName by remember { mutableStateOf(personWithBalance.person.name) }
+    
+    fun formatWithConversion(amount: Double): String {
+        val base = "${String.format("%,.0f", amount)}$currencySymbol"
+        if (!showConversion) return base
+        val converted = convertToStandard(amount)
+        return if (converted != null) {
+            "$base (${String.format("%,.0f", converted)}$standardCurrencySymbol)"
+        } else base
+    }
     
     Card(
         modifier = Modifier
@@ -289,19 +311,19 @@ fun PersonBalanceCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "보유 현금: ${String.format("%,.0f", personWithBalance.totalCash)}$currencySymbol",
+                    text = "보유 현금: ${formatWithConversion(personWithBalance.totalCash)}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "현금 사용: ${String.format("%,.0f", personWithBalance.cashSpent)}$currencySymbol",
+                    text = "현금 사용: ${formatWithConversion(personWithBalance.cashSpent)}",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = "카드 사용: ${String.format("%,.0f", personWithBalance.cardSpent)}$currencySymbol",
+                    text = "카드 사용: ${formatWithConversion(personWithBalance.cardSpent)}",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = "남은 현금: ${String.format("%,.0f", personWithBalance.remainingCash)}$currencySymbol",
+                    text = "남은 현금: ${formatWithConversion(personWithBalance.remainingCash)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (personWithBalance.remainingCash < 0) 
                         MaterialTheme.colorScheme.error 
@@ -392,11 +414,23 @@ fun ExpenseCard(
     expense: io.github.mbp16.travelmoneynote.data.Expense,
     viewModel: MainViewModel,
     currencySymbol: String,
+    standardCurrencySymbol: String = currencySymbol,
+    showConversion: Boolean = false,
+    convertToStandard: (Double) -> Double? = { null },
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
     val expenseWithPayments by viewModel.getExpenseWithPayments(expense.id).collectAsState(initial = null)
     var showDeleteDialog by remember { mutableStateOf(false) }
+    
+    fun formatWithConversion(amount: Double): String {
+        val base = "${if (amount % 1.0 == 0.0) amount.toInt() else amount}$currencySymbol"
+        if (!showConversion) return base
+        val converted = convertToStandard(amount)
+        return if (converted != null) {
+            "$base (${String.format("%,.0f", converted)}$standardCurrencySymbol)"
+        } else base
+    }
     
     Card(
         modifier = Modifier
@@ -431,7 +465,7 @@ fun ExpenseCard(
                         )
                     }
                     Text(
-                        text = "${if (expense.totalAmount % 1.0 == 0.0) expense.totalAmount.toInt() else expense.totalAmount}$currencySymbol",
+                        text = formatWithConversion(expense.totalAmount),
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -439,7 +473,7 @@ fun ExpenseCard(
                 
                 expenseWithPayments?.payments?.forEach { paymentWithPerson ->
                     Text(
-                        text = "${paymentWithPerson.personName}: ${String.format("%,.0f", paymentWithPerson.payment.amount)}$currencySymbol (${if (paymentWithPerson.payment.method == io.github.mbp16.travelmoneynote.data.PaymentMethod.CASH) "현금" else "카드"})",
+                        text = "${paymentWithPerson.personName}: ${formatWithConversion(paymentWithPerson.payment.amount)} (${if (paymentWithPerson.payment.method == io.github.mbp16.travelmoneynote.data.PaymentMethod.CASH) "현금" else "카드"})",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
