@@ -25,11 +25,17 @@ data class PersonWithBalance(
 
 data class ExpenseWithPayments(
     val expense: Expense,
-    val payments: List<PaymentWithPerson>
+    val payments: List<PaymentWithPerson>,
+    val expenseUsers: List<ExpenseUserWithPerson> = emptyList()
 )
 
 data class PaymentWithPerson(
     val payment: Payment,
+    val personName: String
+)
+
+data class ExpenseUserWithPerson(
+    val expenseUser: ExpenseUser,
     val personName: String
 )
 
@@ -40,6 +46,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val cashEntryDao = database.cashEntryDao()
     private val expenseDao = database.expenseDao()
     private val paymentDao = database.paymentDao()
+    private val expenseUserDao = database.expenseUserDao()
     
     private val prefs = application.getSharedPreferences("settings", Context.MODE_PRIVATE)
     
@@ -128,8 +135,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return combine(
             expenseDao.getAllExpenses().map { it.find { e -> e.id == expenseId } },
             paymentDao.getPaymentsForExpense(expenseId),
+            expenseUserDao.getExpenseUsersForExpense(expenseId),
             persons
-        ) { expense, payments, personList ->
+        ) { expense, payments, expenseUsers, personList ->
             expense?.let {
                 ExpenseWithPayments(
                     expense = it,
@@ -137,6 +145,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         PaymentWithPerson(
                             payment = payment,
                             personName = personList.find { p -> p.id == payment.personId }?.name ?: "Unknown"
+                        )
+                    },
+                    expenseUsers = expenseUsers.map { eu ->
+                        ExpenseUserWithPerson(
+                            expenseUser = eu,
+                            personName = personList.find { p -> p.id == eu.personId }?.name ?: "Unknown"
                         )
                     }
                 )
@@ -193,7 +207,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         totalAmount: Double,
         description: String,
         photoUri: String?,
-        payments: List<Triple<Long, Double, PaymentMethod>>
+        payments: List<Triple<Long, Double, PaymentMethod>>,
+        expenseUsers: List<Triple<Long, Double, String>> = emptyList()
     ) {
         val travelId = _selectedTravelId.value
         if (travelId <= 0) return
@@ -216,6 +231,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             paymentDao.insertAll(paymentEntities)
+            val expenseUserEntities = expenseUsers.map { (personId, amount, desc) ->
+                ExpenseUser(
+                    expenseId = expenseId,
+                    personId = personId,
+                    amount = amount,
+                    description = desc
+                )
+            }
+            expenseUserDao.insertAll(expenseUserEntities)
         }
     }
 
@@ -225,7 +249,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         totalAmount: Double,
         description: String,
         photoUri: String?,
-        payments: List<Triple<Long, Double, PaymentMethod>>
+        payments: List<Triple<Long, Double, PaymentMethod>>,
+        expenseUsers: List<Triple<Long, Double, String>> = emptyList()
     ) {
         val travelId = _selectedTravelId.value
         if (travelId <= 0) return
@@ -250,6 +275,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
             paymentDao.insertAll(paymentEntities)
+            expenseUserDao.deleteExpenseUsersForExpense(expenseId)
+            val expenseUserEntities = expenseUsers.map { (personId, amount, desc) ->
+                ExpenseUser(
+                    expenseId = expenseId,
+                    personId = personId,
+                    amount = amount,
+                    description = desc
+                )
+            }
+            expenseUserDao.insertAll(expenseUserEntities)
         }
     }
 
@@ -330,6 +365,67 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             (cashTransactions + paymentTransactions).sortedByDescending { it.createdAt }
         }
     }
+
+    data class Settlement(
+        val fromPersonId: Long,
+        val fromPersonName: String,
+        val toPersonId: Long,
+        val toPersonName: String,
+        val amount: Double
+    )
+
+    fun getSettlementsForTravel(): Flow<List<Settlement>> {
+        return combine(
+            persons,
+            expenses,
+            paymentDao.getAllPayments(),
+            expenseUserDao.getAllExpenseUsers()
+        ) { personList, expenseList, allPayments, allExpenseUsers ->
+            val expenseIds = expenseList.map { it.id }.toSet()
+            val payments = allPayments.filter { it.expenseId in expenseIds }
+            val expenseUsers = allExpenseUsers.filter { it.expenseId in expenseIds }
+
+            val personMap = personList.associateBy { it.id }
+            val balances = mutableMapOf<Long, Double>()
+            personList.forEach { balances[it.id] = 0.0 }
+
+            // 결제한 사람은 + (다른 사람들이 갚아야 함)
+            payments.forEach { payment ->
+                balances[payment.personId] = balances.getOrDefault(payment.personId, 0.0) + payment.amount
+            }
+
+            // 사용한 사람은 - (갚아야 함)
+            expenseUsers.forEach { eu ->
+                balances[eu.personId] = balances.getOrDefault(eu.personId, 0.0) - eu.amount
+            }
+
+            val creditors = balances.filter { it.value > 0.001 }.toMutableMap()
+            val debtors = balances.filter { it.value < -0.001 }.mapValues { -it.value }.toMutableMap()
+
+            val settlements = mutableListOf<Settlement>()
+            for ((creditorId, creditAmount) in creditors.toList()) {
+                var remaining = creditAmount
+                for ((debtorId, debtAmount) in debtors.toList()) {
+                    if (remaining <= 0.001) break
+                    val amount = minOf(remaining, debtAmount)
+                    if (amount > 0.001) {
+                        settlements.add(
+                            Settlement(
+                                fromPersonId = debtorId,
+                                fromPersonName = personMap[debtorId]?.name ?: "Unknown",
+                                toPersonId = creditorId,
+                                toPersonName = personMap[creditorId]?.name ?: "Unknown",
+                                amount = amount
+                            )
+                        )
+                        remaining -= amount
+                        debtors[debtorId] = debtAmount - amount
+                    }
+                }
+            }
+            settlements
+        }
+    }
     
     private val json = Json { prettyPrint = true }
     
@@ -355,6 +451,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val expenses = expenseDao.getExpensesByTravelOnce(travel.id)
             val expenseExports = expenses.map { expense ->
                 val payments = paymentDao.getPaymentsForExpenseOnce(expense.id)
+                val expenseUsers = expenseUserDao.getExpenseUsersForExpenseOnce(expense.id)
                 ExpenseExport(
                     id = expense.id,
                     title = expense.title,
@@ -368,6 +465,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             personId = payment.personId,
                             amount = payment.amount,
                             method = payment.method.name
+                        )
+                    },
+                    expenseUsers = expenseUsers.map { eu ->
+                        ExpenseUserExport(
+                            id = eu.id,
+                            personId = eu.personId,
+                            amount = eu.amount,
+                            description = eu.description
                         )
                     }
                 )
@@ -474,6 +579,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                         personId = newPersonId,
                                         amount = payment.amount,
                                         method = PaymentMethod.valueOf(payment.method)
+                                    )
+                                )
+                            }
+
+                            for (expenseUser in expense.expenseUsers) {
+                                val newPersonId = personIdMap[expenseUser.personId] ?: continue
+                                expenseUserDao.insert(
+                                    ExpenseUser(
+                                        expenseId = newExpenseId,
+                                        personId = newPersonId,
+                                        amount = expenseUser.amount,
+                                        description = expenseUser.description
                                     )
                                 )
                             }

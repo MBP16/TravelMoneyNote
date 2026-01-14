@@ -92,6 +92,9 @@ interface ExpenseDao {
 
 @Dao
 interface PaymentDao {
+    @Query("SELECT * FROM payments")
+    fun getAllPayments(): Flow<List<Payment>>
+
     @Query("SELECT * FROM payments WHERE expenseId = :expenseId")
     fun getPaymentsForExpense(expenseId: Long): Flow<List<Payment>>
     
@@ -118,4 +121,34 @@ interface PaymentDao {
     
     @Query("DELETE FROM payments WHERE expenseId = :expenseId")
     suspend fun deletePaymentsForExpense(expenseId: Long)
+}
+
+@Dao
+interface ExpenseUserDao {
+    @Query("SELECT * FROM expense_users")
+    fun getAllExpenseUsers(): Flow<List<ExpenseUser>>
+
+    @Query("SELECT * FROM expense_users WHERE expenseId = :expenseId")
+    fun getExpenseUsersForExpense(expenseId: Long): Flow<List<ExpenseUser>>
+
+    @Query("SELECT * FROM expense_users WHERE expenseId = :expenseId")
+    suspend fun getExpenseUsersForExpenseOnce(expenseId: Long): List<ExpenseUser>
+
+    @Query("SELECT * FROM expense_users WHERE personId = :personId")
+    fun getExpenseUsersForPerson(personId: Long): Flow<List<ExpenseUser>>
+
+    @Query("SELECT COALESCE(SUM(amount), 0) FROM expense_users WHERE personId = :personId")
+    fun getTotalUsedByPerson(personId: Long): Flow<Double>
+
+    @Insert
+    suspend fun insert(expenseUser: ExpenseUser): Long
+
+    @Insert
+    suspend fun insertAll(expenseUsers: List<ExpenseUser>)
+
+    @Delete
+    suspend fun delete(expenseUser: ExpenseUser)
+
+    @Query("DELETE FROM expense_users WHERE expenseId = :expenseId")
+    suspend fun deleteExpenseUsersForExpense(expenseId: Long)
 }

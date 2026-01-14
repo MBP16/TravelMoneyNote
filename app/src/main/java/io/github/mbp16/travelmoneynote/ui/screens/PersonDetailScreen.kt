@@ -35,6 +35,7 @@ fun PersonDetailScreen(
     val personsWithBalance by viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
     val personWithBalance = personsWithBalance.find { it.person.id == personId }
     val transactions by viewModel.getTransactionsForPerson(personId).collectAsState(initial = emptyList())
+    val settlements by viewModel.getSettlementsForTravel().collectAsState(initial = emptyList())
     val currentCurrency by viewModel.currentCurrency.collectAsState()
     val standardCurrency by viewModel.standardCurrency.collectAsState()
     val exchangeRates by viewModel.exchangeRates.collectAsState()
@@ -43,6 +44,11 @@ fun PersonDetailScreen(
     val standardCurrencySymbol = availableCurrencies.find { it.code == standardCurrency }?.symbol ?: "₩"
     val showConversion = currentCurrency != standardCurrency && exchangeRates != null
     val dateFormat = remember { SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()) }
+
+    // 이 사람이 받아야 할 금액 (다른 사람들이 이 사람에게)
+    val toReceive = settlements.filter { it.toPersonId == personId }
+    // 이 사람이 갚아야 할 금액 (이 사람이 다른 사람에게)
+    val toPay = settlements.filter { it.fromPersonId == personId }
     
     fun formatWithConversion(amount: Double): String {
         val base = "${String.format("%,.0f", amount)}$currencySymbol"
@@ -214,6 +220,72 @@ fun PersonDetailScreen(
                                     else
                                         MaterialTheme.colorScheme.primary
                                 )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 정산 정보 섹션
+            if (toReceive.isNotEmpty() || toPay.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "정산 정보",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (toReceive.isNotEmpty()) {
+                                Text(
+                                    text = "받을 금액",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                toReceive.forEach { settlement ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("${settlement.fromPersonName}에게서")
+                                        Text(
+                                            "+${formatWithConversion(settlement.amount)}",
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+
+                            if (toReceive.isNotEmpty() && toPay.isNotEmpty()) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                            }
+
+                            if (toPay.isNotEmpty()) {
+                                Text(
+                                    text = "갚아야 할 금액",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                toPay.forEach { settlement ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text("${settlement.toPersonName}에게")
+                                        Text(
+                                            "-${formatWithConversion(settlement.amount)}",
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

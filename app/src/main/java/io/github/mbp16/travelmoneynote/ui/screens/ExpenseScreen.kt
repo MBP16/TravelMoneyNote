@@ -36,6 +36,12 @@ data class PaymentEntry(
     val method: PaymentMethod
 )
 
+data class ExpenseUserEntry(
+    val person: Person?,
+    val amount: String,
+    val description: String
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseScreen(
@@ -62,6 +68,7 @@ fun ExpenseScreen(
     var photoUri by remember { mutableStateOf<Uri?>(null) }
     var tempPhotoUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var payments by remember { mutableStateOf(listOf(PaymentEntry(null, "", PaymentMethod.CASH))) }
+    var expenseUsers by remember { mutableStateOf(listOf(ExpenseUserEntry(null, "", ""))) }
     var isInitialized by remember { mutableStateOf(false) }
 
     // Initialize state if editing
@@ -77,6 +84,13 @@ fun ExpenseScreen(
                     method = pwp.payment.method
                 )
             }.ifEmpty { listOf(PaymentEntry(null, "", PaymentMethod.CASH)) }
+            expenseUsers = expenseWithPayments.expenseUsers.map { eup ->
+                ExpenseUserEntry(
+                    person = persons.find { it.id == eup.expenseUser.personId },
+                    amount = eup.expenseUser.amount.toString(),
+                    description = eup.expenseUser.description
+                )
+            }.ifEmpty { listOf(ExpenseUserEntry(null, "", "")) }
             isInitialized = true
         }
     }
@@ -116,7 +130,9 @@ fun ExpenseScreen(
     }
     
     val totalAmount = payments.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
-    val isValid = payments.all { it.person != null && (it.amount.toDoubleOrNull() ?: 0.0) > 0 } && payments.isNotEmpty()
+    val totalUserAmount = expenseUsers.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
+    val isValid = payments.all { it.person != null && (it.amount.toDoubleOrNull() ?: 0.0) > 0 } && payments.isNotEmpty() &&
+        expenseUsers.all { it.person != null && (it.amount.toDoubleOrNull() ?: 0.0) > 0 } && expenseUsers.isNotEmpty()
 
     val onSave = {
         if (isValid) {
@@ -131,6 +147,12 @@ fun ExpenseScreen(
                             val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
                             Triple(person.id, amount, payment.method)
                         }
+                    },
+                    expenseUsers = expenseUsers.mapNotNull { eu ->
+                        eu.person?.let { person ->
+                            val amount = eu.amount.toDoubleOrNull() ?: return@mapNotNull null
+                            Triple(person.id, amount, eu.description)
+                        }
                     }
                 )
             } else {
@@ -144,6 +166,12 @@ fun ExpenseScreen(
                         payment.person?.let { person ->
                             val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
                             Triple(person.id, amount, payment.method)
+                        }
+                    },
+                    expenseUsers = expenseUsers.mapNotNull { eu ->
+                        eu.person?.let { person ->
+                            val amount = eu.amount.toDoubleOrNull() ?: return@mapNotNull null
+                            Triple(person.id, amount, eu.description)
                         }
                     }
                 )
@@ -256,6 +284,65 @@ fun ExpenseScreen(
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("결제자 추가")
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "사용자 (실제 소비 이용자)",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+                itemsIndexed(expenseUsers) { index, expenseUser ->
+                    ExpenseUserEntryCard(
+                        expenseUser = expenseUser,
+                        persons = persons,
+                        onExpenseUserChange = { newExpenseUser ->
+                            expenseUsers = expenseUsers.toMutableList().apply {
+                                this[index] = newExpenseUser
+                            }
+                        },
+                        onDelete = {
+                            if (expenseUsers.size > 1) {
+                                expenseUsers = expenseUsers.toMutableList().apply {
+                                    removeAt(index)
+                                }
+                            }
+                        },
+                        canDelete = expenseUsers.size > 1,
+                        currencySymbol = currencySymbol
+                    )
+                }
+
+                item {
+                    OutlinedButton(
+                        onClick = {
+                            expenseUsers = expenseUsers + ExpenseUserEntry(null, "", "")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("사용자 추가")
+                    }
+                }
+
+                item {
+                    if (totalUserAmount > 0 && kotlin.math.abs(totalAmount - totalUserAmount) > 0.01) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            )
+                        ) {
+                            Text(
+                                text = "⚠️ 결제 금액(${String.format("%,.0f", totalAmount)}$currencySymbol)과 사용자 합계(${String.format("%,.0f", totalUserAmount)}$currencySymbol)가 다릅니다",
+                                modifier = Modifier.padding(16.dp),
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
                     }
                 }
             }
@@ -446,6 +533,93 @@ fun PaymentEntryCard(
                     )
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExpenseUserEntryCard(
+    expenseUser: ExpenseUserEntry,
+    persons: List<Person>,
+    onExpenseUserChange: (ExpenseUserEntry) -> Unit,
+    onDelete: () -> Unit,
+    canDelete: Boolean,
+    currencySymbol: String
+) {
+    var personExpanded by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("사용자 정보", style = MaterialTheme.typography.titleSmall)
+                if (canDelete) {
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "삭제",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+
+            ExposedDropdownMenuBox(
+                expanded = personExpanded,
+                onExpandedChange = { personExpanded = !personExpanded }
+            ) {
+                OutlinedTextField(
+                    value = expenseUser.person?.name ?: "",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("사용자") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = personExpanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = personExpanded,
+                    onDismissRequest = { personExpanded = false }
+                ) {
+                    persons.forEach { person ->
+                        DropdownMenuItem(
+                            text = { Text(person.name) },
+                            onClick = {
+                                onExpenseUserChange(expenseUser.copy(person = person))
+                                personExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            OutlinedTextField(
+                value = expenseUser.amount,
+                onValueChange = { onExpenseUserChange(expenseUser.copy(amount = it.filter { c -> c.isDigit() || c == '.' })) },
+                label = { Text("금액") },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true,
+                suffix = { Text(currencySymbol) }
+            )
+
+            OutlinedTextField(
+                value = expenseUser.description,
+                onValueChange = { onExpenseUserChange(expenseUser.copy(description = it)) },
+                label = { Text("설명 (선택)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
         }
     }
 }

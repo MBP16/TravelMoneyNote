@@ -108,3 +108,30 @@ data class Payment(
     val amount: Double,
     val method: PaymentMethod
 )
+
+@Entity(
+    tableName = "expense_users",
+    foreignKeys = [
+        ForeignKey(
+            entity = Expense::class,
+            parentColumns = ["id"],
+            childColumns = ["expenseId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = Person::class,
+            parentColumns = ["id"],
+            childColumns = ["personId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("expenseId"), Index("personId")]
+)
+data class ExpenseUser(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val expenseId: Long,
+    val personId: Long,
+    val amount: Double,
+    val description: String = ""
+)

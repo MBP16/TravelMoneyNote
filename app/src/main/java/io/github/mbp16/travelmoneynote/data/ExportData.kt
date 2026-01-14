@@ -44,7 +44,8 @@ data class ExpenseExport(
     val description: String,
     val photoUri: String?,
     val createdAt: Long,
-    val payments: List<PaymentExport>
+    val payments: List<PaymentExport>,
+    val expenseUsers: List<ExpenseUserExport> = emptyList()
 )
 
 @Serializable
@@ -53,4 +54,12 @@ data class PaymentExport(
     val personId: Long,
     val amount: Double,
     val method: String
+)
+
+@Serializable
+data class ExpenseUserExport(
+    val id: Long,
+    val personId: Long,
+    val amount: Double,
+    val description: String
 )
