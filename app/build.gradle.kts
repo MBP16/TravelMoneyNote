@@ -70,6 +70,10 @@ dependencies {
     // OkHttp for network calls
     implementation(libs.okhttp)
     
+    // Glance for widgets
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

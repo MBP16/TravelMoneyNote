@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">여행 가계부</string>
+    <string name="widget_description">현재 여행의 지출 현황과 남은 현금을 확인하세요</string>
 </resources>
