@@ -6,13 +6,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.CashEntry
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -45,6 +48,11 @@ fun PersonDetailScreen(
     val showConversion = currentCurrency != standardCurrency && exchangeRates != null
     val dateFormat = remember { SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()) }
 
+    // 현금 추가 아랫 모달
+    var showAddCashSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+
     // 이 사람이 받아야 할 금액 (다른 사람들이 이 사람에게)
     val toReceive = settlements.filter { it.toPersonId == personId }
     // 이 사람이 갚아야 할 금액 (이 사람이 다른 사람에게)
@@ -61,6 +69,25 @@ fun PersonDetailScreen(
     
     var transactionToDelete by remember { mutableStateOf<TransactionItem?>(null) }
     var transactionToEdit by remember { mutableStateOf<TransactionItem?>(null) }
+
+    if (showAddCashSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showAddCashSheet = false },
+            sheetState = sheetState
+        ) {
+            AddCashScreen(
+                person = personWithBalance!!.person,
+                viewModel = viewModel,
+                onDismiss = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        if (!sheetState.isVisible) {
+                            showAddCashSheet = false
+                        }
+                    }
+                }
+            )
+        }
+    }
 
     if (transactionToDelete != null) {
         AlertDialog(
@@ -83,7 +110,7 @@ fun PersonDetailScreen(
                         }
                         transactionToDelete = null
                     }
-                ) { Text("삭제") }
+                ) { Text("삭제", color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { transactionToDelete = null }) { Text("취소") }
@@ -294,10 +321,25 @@ fun PersonDetailScreen(
             
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "자산 변동 내역",
-                    style = MaterialTheme.typography.titleLarge
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "자산 변동 내역",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Button(
+                        onClick = {
+                            showAddCashSheet = true
+                        },
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("현금 추가")
+                    }
+                }
             }
             
             if (transactions.isEmpty()) {

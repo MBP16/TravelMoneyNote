@@ -13,22 +13,14 @@ import io.github.mbp16.travelmoneynote.data.Person
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCashScreen(
+    person: Person,
     viewModel: MainViewModel,
     onDismiss: () -> Unit
 ) {
-    val persons by viewModel.persons.collectAsState()
     val currentCurrency by viewModel.currentCurrency.collectAsState()
-    var selectedPerson by remember { mutableStateOf<Person?>(null) }
     var amount by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
     val currencySymbol = availableCurrencies.find { it.code == currentCurrency }?.symbol ?: "₩"
-    
-    LaunchedEffect(persons) {
-        if (selectedPerson == null && persons.isNotEmpty()) {
-            selectedPerson = persons.first()
-        }
-    }
     
     Column(
         modifier = Modifier
@@ -42,78 +34,40 @@ fun AddCashScreen(
             style = MaterialTheme.typography.titleLarge
         )
 
-        if (persons.isEmpty()) {
-            Text(
-                text = "먼저 사람을 추가해주세요",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error
-            )
-        } else {
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                OutlinedTextField(
-                    value = selectedPerson?.name ?: "",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("사람 선택") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    persons.forEach { person ->
-                        DropdownMenuItem(
-                            text = { Text(person.name) },
-                            onClick = {
-                                selectedPerson = person
-                                expanded = false
-                            }
-                        )
-                    }
+        OutlinedTextField(
+            value = amount,
+            onValueChange = { amount = it.filter { c -> c.isDigit() || c == '.' } },
+            label = { Text("금액") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            suffix = { Text(currencySymbol) }
+        )
+
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("설명 (선택)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Button(
+            onClick = {
+                val amountValue = amount.toDoubleOrNull()
+                amountValue?.let {
+                    viewModel.addCashEntry(
+                        personId = person.id,
+                        amount = it,
+                        description = description.trim()
+                    )
                 }
-            }
-            
-            OutlinedTextField(
-                value = amount,
-                onValueChange = { amount = it.filter { c -> c.isDigit() || c == '.' } },
-                label = { Text("금액") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                suffix = { Text(currencySymbol) }
-            )
-            
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("설명 (선택)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            
-            Button(
-                onClick = {
-                    val amountValue = amount.toDoubleOrNull()
-                    if (selectedPerson != null && amountValue != null && amountValue > 0) {
-                        viewModel.addCashEntry(
-                            personId = selectedPerson!!.id,
-                            amount = amountValue,
-                            description = description.trim()
-                        )
-                        onDismiss()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = selectedPerson != null && amount.toDoubleOrNull()?.let { it > 0 } == true
-            ) {
-                Text("추가")
-            }
+                onDismiss()
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = amount.toDoubleOrNull()?.let { it > 0 } == true
+        ) {
+            Text("추가")
         }
         Spacer(modifier = Modifier.height(16.dp))
     }

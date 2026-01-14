@@ -44,7 +44,6 @@ fun HomeScreen(
     val selectedTravel = travels.find { it.id == selectedTravelId }
 
     var showAddPersonSheet by remember { mutableStateOf(false) }
-    var showAddCashSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val scope = rememberCoroutineScope()
 
@@ -111,10 +110,23 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item {
-                    Text(
-                        text = "인원 현황",
-                        style = MaterialTheme.typography.titleLarge
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "인원 현황",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Button(
+                            onClick = { showAddPersonSheet = true },
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("사람 추가")
+                        }
+                    }
                 }
                 
                 if (personsWithBalance.isEmpty()) {
@@ -147,31 +159,7 @@ fun HomeScreen(
                 }
                 
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Button(
-                            onClick = { showAddPersonSheet = true },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("사람 추가")
-                        }
-                        Button(
-                            onClick = { showAddCashSheet = true },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("현금 추가")
-                        }
-                    }
-                }
-                
-                item {
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -241,24 +229,6 @@ fun HomeScreen(
                         scope.launch { sheetState.hide() }.invokeOnCompletion {
                             if (!sheetState.isVisible) {
                                 showAddPersonSheet = false
-                            }
-                        }
-                    }
-                )
-            }
-        }
-
-        if (showAddCashSheet) {
-            ModalBottomSheet(
-                onDismissRequest = { showAddCashSheet = false },
-                sheetState = sheetState
-            ) {
-                AddCashScreen(
-                    viewModel = viewModel,
-                    onDismiss = {
-                        scope.launch { sheetState.hide() }.invokeOnCompletion {
-                            if (!sheetState.isVisible) {
-                                showAddCashSheet = false
                             }
                         }
                     }
