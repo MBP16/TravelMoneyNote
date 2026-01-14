@@ -7,6 +7,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,9 +19,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import io.github.mbp16.travelmoneynote.MainViewModel
@@ -216,7 +220,18 @@ fun ExpenseScreen(
             
             item {
                 Card(
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .dropShadow(
+                            shape = RoundedCornerShape(16.dp),
+                            shadow = Shadow(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                radius = 16.dp,
+                                spread = 0.dp,
+                                offset = DpOffset(0.dp, 8.dp)
+                            )
+                        )
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp)
@@ -436,7 +451,17 @@ fun PaymentEntryCard(
     var methodExpanded by remember { mutableStateOf(false) }
     
     Card(
-        modifier = Modifier.fillMaxWidth()
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .dropShadow(
+                shape = RoundedCornerShape(16.dp),
+                shadow = Shadow(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                    radius = 8.dp,
+                    offset = DpOffset(0.dp, 4.dp)
+                )
+            )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -550,7 +575,17 @@ fun ExpenseUserEntryCard(
     var personExpanded by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier.fillMaxWidth()
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .dropShadow(
+                shape = RoundedCornerShape(16.dp),
+                shadow = Shadow(
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                    radius = 8.dp,
+                    offset = DpOffset(0.dp, 4.dp)
+                )
+            )
     ) {
         Column(
             modifier = Modifier.padding(16.dp),

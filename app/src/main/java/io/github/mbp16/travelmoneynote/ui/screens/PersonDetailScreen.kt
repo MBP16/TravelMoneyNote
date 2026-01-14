@@ -3,6 +3,7 @@ package io.github.mbp16.travelmoneynote.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -11,7 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.CashEntry
@@ -193,7 +197,18 @@ fun PersonDetailScreen(
             personWithBalance?.let { pwb ->
                 item {
                     Card(
-                        modifier = Modifier.fillMaxWidth()
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .dropShadow(
+                                shape = RoundedCornerShape(16.dp),
+                                shadow = Shadow(
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                    radius = 16.dp,
+                                    spread = 0.dp,
+                                    offset = DpOffset(0.dp, 8.dp)
+                                )
+                            )
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)
@@ -265,7 +280,17 @@ fun PersonDetailScreen(
 
                 item {
                     Card(
-                        modifier = Modifier.fillMaxWidth()
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .dropShadow(
+                                shape = RoundedCornerShape(16.dp),
+                                shadow = Shadow(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                    radius = 8.dp,
+                                    offset = DpOffset(0.dp, 4.dp)
+                                )
+                            )
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -344,7 +369,19 @@ fun PersonDetailScreen(
             
             if (transactions.isEmpty()) {
                 item {
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .dropShadow(
+                                shape = RoundedCornerShape(16.dp),
+                                shadow = Shadow(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                    radius = 8.dp,
+                                    offset = DpOffset(0.dp, 4.dp)
+                                )
+                            )
+                    ) {
                         Text(
                             text = "변동 내역이 없습니다",
                             modifier = Modifier.padding(16.dp),
@@ -354,7 +391,19 @@ fun PersonDetailScreen(
                 }
             } else {
                 items(transactions) { transaction ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .dropShadow(
+                                shape = RoundedCornerShape(16.dp),
+                                shadow = Shadow(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                    radius = 8.dp,
+                                    offset = DpOffset(0.dp, 4.dp)
+                                )
+                            )
+                    ) {
                         Column {
                             Row(
                                 modifier = Modifier

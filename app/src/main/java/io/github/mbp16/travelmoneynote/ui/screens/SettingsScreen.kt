@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -17,7 +18,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.Travel
@@ -126,7 +130,17 @@ fun SettingsScreen(
             if (travels.isEmpty()) {
                 item {
                     Card(
-                        modifier = Modifier.fillMaxWidth()
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .dropShadow(
+                                shape = RoundedCornerShape(16.dp),
+                                shadow = Shadow(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                    radius = 8.dp,
+                                    offset = DpOffset(0.dp, 4.dp)
+                                )
+                            )
                     ) {
                         Text(
                             text = "등록된 여행이 없습니다",
@@ -139,8 +153,18 @@ fun SettingsScreen(
             } else {
                 items(travels) { travel ->
                     Card(
+                        shape = RoundedCornerShape(16.dp),
                         modifier = Modifier
                             .fillMaxWidth()
+                            .dropShadow(
+                                shape = RoundedCornerShape(16.dp),
+                                shadow = Shadow(
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                    radius = 16.dp,
+                                    spread = 0.dp,
+                                    offset = DpOffset(0.dp, 8.dp)
+                                )
+                            )
                             .clickable { viewModel.selectTravel(travel.id) },
                         colors = CardDefaults.cardColors(
                             containerColor = if (travel.id == selectedTravelId) 
@@ -248,8 +272,17 @@ fun SettingsScreen(
             
             item {
                 Card(
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .dropShadow(
+                            shape = RoundedCornerShape(16.dp),
+                            shadow = Shadow(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                radius = 8.dp,
+                                offset = DpOffset(0.dp, 4.dp)
+                            )
+                        )
                         .clickable {
                             val fileName = "travel_money_note_${fileNameFormatter.format(Date())}.json"
                             exportLauncher.launch(fileName)
@@ -278,8 +311,17 @@ fun SettingsScreen(
             
             item {
                 Card(
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .dropShadow(
+                            shape = RoundedCornerShape(16.dp),
+                            shadow = Shadow(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                radius = 8.dp,
+                                offset = DpOffset(0.dp, 4.dp)
+                            )
+                        )
                         .clickable {
                             importLauncher.launch(arrayOf("application/json"))
                         }
@@ -307,8 +349,17 @@ fun SettingsScreen(
             
             item {
                 Card(
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
                         .fillMaxWidth()
+                        .dropShadow(
+                            shape = RoundedCornerShape(16.dp),
+                            shadow = Shadow(
+                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f),
+                                radius = 8.dp,
+                                offset = DpOffset(0.dp, 4.dp)
+                            )
+                        )
                         .clickable { showResetDialog = true },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer

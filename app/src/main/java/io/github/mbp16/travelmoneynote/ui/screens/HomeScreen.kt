@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -13,6 +14,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.PersonWithBalance
@@ -132,7 +136,17 @@ fun HomeScreen(
                 if (personsWithBalance.isEmpty()) {
                     item {
                         Card(
-                            modifier = Modifier.fillMaxWidth()
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .dropShadow(
+                                    shape = RoundedCornerShape(16.dp),
+                                    shadow = Shadow(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                        radius = 8.dp,
+                                        offset = DpOffset(0.dp, 4.dp)
+                                    )
+                                )
                         ) {
                             Text(
                                 text = "등록된 인원이 없습니다",
@@ -182,7 +196,17 @@ fun HomeScreen(
                 if (expenses.isEmpty()) {
                     item {
                         Card(
-                            modifier = Modifier.fillMaxWidth()
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .dropShadow(
+                                    shape = RoundedCornerShape(16.dp),
+                                    shadow = Shadow(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                                        radius = 8.dp,
+                                        offset = DpOffset(0.dp, 4.dp)
+                                    )
+                                )
                         ) {
                             Text(
                                 text = "소비 내역이 없습니다",
@@ -263,8 +287,18 @@ fun PersonBalanceCard(
     }
     
     Card(
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .dropShadow(
+                shape = RoundedCornerShape(16.dp),
+                shadow = Shadow(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    radius = 16.dp,
+                    spread = 0.dp,
+                    offset = DpOffset(0.dp, 8.dp)
+                )
+            )
             .clickable { onClick() }
     ) {
         Row(
@@ -403,8 +437,18 @@ fun ExpenseCard(
     }
     
     Card(
+        shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .dropShadow(
+                shape = RoundedCornerShape(16.dp),
+                shadow = Shadow(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    radius = 16.dp,
+                    spread = 0.dp,
+                    offset = DpOffset(0.dp, 8.dp)
+                )
+            )
             .clickable { onClick() }
     ) {
         Row(
