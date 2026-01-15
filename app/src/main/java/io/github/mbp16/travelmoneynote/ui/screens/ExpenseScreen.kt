@@ -138,6 +138,16 @@ fun ExpenseScreen(
     val isValid = payments.all { it.person != null && (it.amount.toDoubleOrNull() ?: 0.0) > 0 } && payments.isNotEmpty() &&
         expenseUsers.all { it.person != null && (it.amount.toDoubleOrNull() ?: 0.0) > 0 } && expenseUsers.isNotEmpty()
 
+    val divideEvenlyAmount = {
+        expenseUsers = persons.map { person ->
+            ExpenseUserEntry(
+                person = person,
+                amount = String.format("%.2f", totalAmount / persons.size),
+                description = ""
+            )
+        }
+    }
+
     val onSave = {
         if (isValid) {
             if (expenseId == null) {
@@ -304,10 +314,21 @@ fun ExpenseScreen(
 
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "사용자 (실제 소비 이용자)",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "사용자 (실제 소비 이용자)",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Button(
+                            onClick = divideEvenlyAmount,
+                        ) {
+                            Text("1/n 정산")
+                        }
+                    }
                 }
 
                 itemsIndexed(expenseUsers) { index, expenseUser ->
