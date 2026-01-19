@@ -179,7 +179,9 @@ class TravelSummaryWidget : GlanceAppWidget() {
 
     @Composable
     private fun DataContent(data: WidgetData) {
-        val formatter = NumberFormat.getNumberInstance(Locale.getDefault())
+        fun formatAmount(amount: Double): String {
+            return if (amount % 1.0 == 0.0) amount.toInt().toString() else amount.toString()
+        }
 
         Column(
             modifier = GlanceModifier.fillMaxSize()
@@ -231,7 +233,7 @@ class TravelSummaryWidget : GlanceAppWidget() {
                         )
                     )
                     Text(
-                        text = "${formatter.format(data.totalExpense)} ${data.currency}",
+                        text = "${formatAmount(data.totalExpense)} ${data.currency}",
                         style = TextStyle(
                             color = GlanceTheme.colors.primary,
                             fontSize = 20.sp,
@@ -249,7 +251,7 @@ class TravelSummaryWidget : GlanceAppWidget() {
                         )
                     )
                     Text(
-                        text = "${formatter.format(data.todayExpense)} ${data.currency}",
+                        text = "${formatAmount(data.todayExpense)} ${data.currency}",
                         style = TextStyle(
                             color = GlanceTheme.colors.tertiary,
                             fontSize = 20.sp,
@@ -275,7 +277,7 @@ class TravelSummaryWidget : GlanceAppWidget() {
                         )
                     )
                     Text(
-                        text = "${formatter.format(data.dailyAverage)} ${data.currency}",
+                        text = "${formatAmount(data.dailyAverage)} ${data.currency}",
                         style = TextStyle(
                             color = GlanceTheme.colors.primary,
                             fontSize = 20.sp,
@@ -293,7 +295,7 @@ class TravelSummaryWidget : GlanceAppWidget() {
                         )
                     )
                     Text(
-                        text = "${formatter.format(data.remainingCash)} ${data.currency}",
+                        text = "${formatAmount(data.remainingCash)} ${data.currency}",
                         style = TextStyle(
                             color = GlanceTheme.colors.error,
                             fontSize = 20.sp,
