@@ -63,7 +63,7 @@ fun PersonDetailScreen(
     val toPay = settlements.filter { it.fromPersonId == personId }
     
     fun formatWithConversion(amount: Double): String {
-        val base = "${String.format("%,.0f", amount)}$currencySymbol"
+        val base = "${if (amount % 1.0 == 0.0) amount.toInt() else amount}$currencySymbol"
         if (!showConversion) return base
         val converted = viewModel.convertToStandardCurrency(amount, currentCurrency)
         return if (converted != null) {

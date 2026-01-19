@@ -374,7 +374,7 @@ fun ExpenseScreen(
                             )
                         ) {
                             Text(
-                                text = "⚠️ 결제 금액(${String.format("%,.0f", totalAmount)}$currencySymbol)과 사용자 합계(${String.format("%,.0f", totalUserAmount)}$currencySymbol)가 다릅니다",
+                                text = "⚠️ 결제 금액(${if (totalAmount % 1.0 == 0.0) totalAmount.toInt() else totalAmount}$currencySymbol)과 사용자 합계(${if (totalUserAmount % 1.0 == 0.0) totalUserAmount.toInt() else totalUserAmount}$currencySymbol)가 다릅니다",
                                 modifier = Modifier.padding(16.dp),
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
