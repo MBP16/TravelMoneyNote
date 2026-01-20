@@ -44,7 +44,7 @@ data class ExpenseExport(
     val description: String,
     val photoUri: String?,  // Deprecated: kept for backward compatibility
     val photoUris: String? = null,  // New: comma-separated list of photo URIs
-    val photoData: List<String>? = null,  // Base64 encoded photo data
+    val photoFiles: List<String>? = null,  // Photo filenames in the ZIP archive
     val createdAt: Long,
     val payments: List<PaymentExport>,
     val expenseUsers: List<ExpenseUserExport> = emptyList()

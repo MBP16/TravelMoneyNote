@@ -438,7 +438,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     
     suspend fun exportDataToJson(): String = withContext(Dispatchers.IO) {
         val allTravels = travelDao.getAllTravelsOnce()
-        val context = getApplication<Application>()
         val travelExports = allTravels.map { travel ->
             val persons = personDao.getPersonsByTravelOnce(travel.id)
             val personExports = persons.map { person ->
@@ -461,20 +460,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val payments = paymentDao.getPaymentsForExpenseOnce(expense.id)
                 val expenseUsers = expenseUserDao.getExpenseUsersForExpenseOnce(expense.id)
                 
-                // Read photo files and encode to base64
+                // Generate photo filenames for ZIP archive
                 val photoUrisString = expense.photoUris ?: expense.photoUri
-                val photoDataList = if (!photoUrisString.isNullOrEmpty()) {
-                    photoUrisString.split(",").mapNotNull { uriString ->
-                        try {
-                            val uri = android.net.Uri.parse(uriString.trim())
-                            val file = java.io.File(uri.path ?: return@mapNotNull null)
-                            if (file.exists() && file.canRead()) {
-                                val bytes = file.readBytes()
-                                android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
-                            } else null
-                        } catch (e: Exception) {
-                            null
-                        }
+                val photoFiles = if (!photoUrisString.isNullOrEmpty()) {
+                    photoUrisString.split(",").mapIndexedNotNull { index, uriString ->
+                        val uri = android.net.Uri.parse(uriString.trim())
+                        val file = java.io.File(uri.path ?: return@mapIndexedNotNull null)
+                        if (file.exists() && file.canRead()) {
+                            "photos/expense_${expense.id}_$index.jpg"
+                        } else null
                     }
                 } else null
                 
@@ -485,7 +479,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     description = expense.description,
                     photoUri = null,  // Deprecated field
                     photoUris = expense.photoUris ?: expense.photoUri,  // Use new field, fallback to old
-                    photoData = photoDataList,  // Base64 encoded photos
+                    photoFiles = photoFiles,  // Filenames in ZIP archive
                     createdAt = expense.createdAt,
                     payments = payments.map { payment ->
                         PaymentExport(
@@ -526,9 +520,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val jsonData = exportDataToJson()
+                val exportData = json.decodeFromString<ExportData>(jsonData)
+                
                 withContext(Dispatchers.IO) {
-                    getApplication<Application>().contentResolver.openOutputStream(uri)?.use { stream ->
-                        stream.write(jsonData.toByteArray())
+                    getApplication<Application>().contentResolver.openOutputStream(uri)?.use { outputStream ->
+                        java.util.zip.ZipOutputStream(outputStream).use { zipOut ->
+                            // Add JSON data file
+                            zipOut.putNextEntry(java.util.zip.ZipEntry("data.json"))
+                            zipOut.write(jsonData.toByteArray())
+                            zipOut.closeEntry()
+                            
+                            // Add photo files
+                            for (travel in exportData.travels) {
+                                for (expense in travel.expenses) {
+                                    val photoUrisString = expense.photoUris ?: expense.photoUri
+                                    if (!photoUrisString.isNullOrEmpty() && !expense.photoFiles.isNullOrEmpty()) {
+                                        val uris = photoUrisString.split(",")
+                                        expense.photoFiles.forEachIndexed { index, photoFileName ->
+                                            if (index < uris.size) {
+                                                try {
+                                                    val uriString = uris[index].trim()
+                                                    val photoUri = android.net.Uri.parse(uriString)
+                                                    val file = java.io.File(photoUri.path ?: return@forEachIndexed)
+                                                    if (file.exists() && file.canRead()) {
+                                                        zipOut.putNextEntry(java.util.zip.ZipEntry(photoFileName))
+                                                        file.inputStream().use { input ->
+                                                            input.copyTo(zipOut)
+                                                        }
+                                                        zipOut.closeEntry()
+                                                    }
+                                                } catch (e: Exception) {
+                                                    e.printStackTrace()
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 onComplete(true)
@@ -542,12 +571,53 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun importFromFile(uri: Uri, onComplete: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
-                val jsonData = withContext(Dispatchers.IO) {
-                    getApplication<Application>().contentResolver.openInputStream(uri)?.use { stream ->
-                        stream.bufferedReader().readText()
-                    } ?: throw Exception("파일을 읽을 수 없습니다")
+                val context = getApplication<Application>()
+                val tempDir = java.io.File(context.cacheDir, "import_temp_${System.currentTimeMillis()}")
+                tempDir.mkdirs()
+                
+                val exportData = withContext(Dispatchers.IO) {
+                    try {
+                        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                            java.util.zip.ZipInputStream(inputStream).use { zipIn ->
+                                var jsonData: String? = null
+                                
+                                // Extract all files from ZIP
+                                var entry = zipIn.nextEntry
+                                while (entry != null) {
+                                    if (entry.name == "data.json") {
+                                        // Read JSON data
+                                        jsonData = zipIn.bufferedReader().readText()
+                                    } else if (entry.name.startsWith("photos/")) {
+                                        // Extract photo files to temp directory
+                                        val photoFile = java.io.File(tempDir, entry.name)
+                                        photoFile.parentFile?.mkdirs()
+                                        photoFile.outputStream().use { output ->
+                                            zipIn.copyTo(output)
+                                        }
+                                    }
+                                    zipIn.closeEntry()
+                                    entry = zipIn.nextEntry
+                                }
+                                
+                                if (jsonData != null) {
+                                    json.decodeFromString<ExportData>(jsonData)
+                                } else {
+                                    throw Exception("ZIP 파일에 data.json이 없습니다")
+                                }
+                            }
+                        } ?: throw Exception("파일을 읽을 수 없습니다")
+                    } catch (e: Exception) {
+                        // If ZIP reading fails, try reading as plain JSON for backward compatibility
+                        try {
+                            val jsonData = context.contentResolver.openInputStream(uri)?.use { stream ->
+                                stream.bufferedReader().readText()
+                            } ?: throw Exception("파일을 읽을 수 없습니다")
+                            json.decodeFromString<ExportData>(jsonData)
+                        } catch (jsonEx: Exception) {
+                            throw Exception("파일 형식이 올바르지 않습니다: ${e.message}")
+                        }
+                    }
                 }
-                val exportData = json.decodeFromString<ExportData>(jsonData)
                 
                 withContext(Dispatchers.IO) {
                     database.clearAllTables()
@@ -588,17 +658,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                         
                         for (expense in travel.expenses) {
-                            // Restore photos from base64 data if available
-                            val photoUrisString = if (!expense.photoData.isNullOrEmpty()) {
-                                val context = getApplication<Application>()
-                                val restoredUris = expense.photoData.mapIndexedNotNull { index, base64Data ->
+                            // Restore photos from extracted files
+                            val photoUrisString = if (!expense.photoFiles.isNullOrEmpty()) {
+                                val restoredUris = expense.photoFiles.mapNotNull { photoFileName ->
                                     try {
-                                        val bytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)
-                                        val timeStamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
-                                        val imageFile = java.io.File(context.filesDir, "IMPORTED_${timeStamp}_$index.jpg")
-                                        imageFile.writeBytes(bytes)
-                                        imageFile.absolutePath
+                                        val tempFile = java.io.File(tempDir, photoFileName)
+                                        if (tempFile.exists()) {
+                                            val timeStamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
+                                            val permanentFile = java.io.File(context.filesDir, "IMPORTED_${timeStamp}_${photoFileName.substringAfterLast('/')}")
+                                            tempFile.copyTo(permanentFile, overwrite = true)
+                                            permanentFile.absolutePath
+                                        } else null
                                     } catch (e: Exception) {
+                                        e.printStackTrace()
                                         null
                                     }
                                 }
@@ -648,6 +720,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             }
                         }
                     }
+                    
+                    // Clean up temp directory
+                    tempDir.deleteRecursively()
                     
                     prefs.edit().putString("standardCurrency", exportData.standardCurrency).apply()
                     _standardCurrency.value = exportData.standardCurrency
