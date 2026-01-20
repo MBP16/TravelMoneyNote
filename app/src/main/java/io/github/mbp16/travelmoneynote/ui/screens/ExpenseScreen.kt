@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -69,7 +70,7 @@ fun ExpenseScreen(
 
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var photoUri by remember { mutableStateOf<Uri?>(null) }
+    var photoUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var tempPhotoUri by rememberSaveable { mutableStateOf<Uri?>(null) }
     var payments by remember { mutableStateOf(listOf(PaymentEntry(null, "", PaymentMethod.CASH))) }
     var expenseUsers by remember { mutableStateOf(listOf(ExpenseUserEntry(null, "", ""))) }
@@ -80,7 +81,15 @@ fun ExpenseScreen(
         if (!isInitialized && expenseId != null && expenseWithPayments != null && persons.isNotEmpty()) {
             title = expenseWithPayments.expense.title
             description = expenseWithPayments.expense.description
-            photoUri = expenseWithPayments.expense.photoUri?.let { Uri.parse(it) }
+            // Load photos from photoUris field (new) or photoUri field (old) for backward compatibility
+            val urisString = expenseWithPayments.expense.photoUris ?: expenseWithPayments.expense.photoUri
+            photoUris = if (!urisString.isNullOrEmpty()) {
+                urisString.split(",").mapNotNull { uri ->
+                    if (uri.isNotBlank()) Uri.parse(uri.trim()) else null
+                }
+            } else {
+                emptyList()
+            }
             payments = expenseWithPayments.payments.map { pwp ->
                 PaymentEntry(
                     person = persons.find { it.id == pwp.payment.personId },
@@ -111,15 +120,15 @@ fun ExpenseScreen(
                     input.copyTo(output)
                 }
             }
-            photoUri = Uri.fromFile(imageFile)
+            photoUris = photoUris + Uri.fromFile(imageFile)
         }
     }
     
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success) {
-            photoUri = tempPhotoUri
+        if (success && tempPhotoUri != null) {
+            photoUris = photoUris + tempPhotoUri!!
         }
     }
     
@@ -162,12 +171,16 @@ fun ExpenseScreen(
 
     val onSave = {
         if (isValid) {
+            val photoUrisString = if (photoUris.isNotEmpty()) {
+                photoUris.joinToString(",") { it.toString() }
+            } else null
+            
             if (expenseId == null) {
                 viewModel.addExpenseWithPayments(
                     title = title.trim(),
                     totalAmount = totalAmount,
                     description = description.trim(),
-                    photoUri = photoUri?.toString(),
+                    photoUri = photoUrisString,
                     payments = payments.mapNotNull { payment ->
                         payment.person?.let { person ->
                             val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
@@ -187,7 +200,7 @@ fun ExpenseScreen(
                     title = title.trim(),
                     totalAmount = totalAmount,
                     description = description.trim(),
-                    photoUri = photoUri?.toString(),
+                    photoUri = photoUrisString,
                     payments = payments.mapNotNull { payment ->
                         payment.person?.let { person ->
                             val amount = payment.amount.toDoubleOrNull() ?: return@mapNotNull null
@@ -453,29 +466,40 @@ fun ExpenseScreen(
                 }
             }
             
-            if (photoUri != null) {
+            if (photoUris.isNotEmpty()) {
                 item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth()
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Box {
-                            Image(
-                                painter = rememberAsyncImagePainter(photoUri),
-                                contentDescription = "영수증 사진",
+                        itemsIndexed(photoUris) { index, uri ->
+                            Card(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp),
-                                contentScale = ContentScale.Crop
-                            )
-                            IconButton(
-                                onClick = { photoUri = null },
-                                modifier = Modifier.align(Alignment.TopEnd)
+                                    .width(200.dp)
+                                    .height(200.dp)
                             ) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "사진 삭제",
-                                    tint = MaterialTheme.colorScheme.error
-                                )
+                                Box {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(uri),
+                                        contentDescription = "영수증 사진 ${index + 1}",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            photoUris = photoUris.toMutableList().apply {
+                                                removeAt(index)
+                                            }
+                                        },
+                                        modifier = Modifier.align(Alignment.TopEnd)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "사진 삭제",
+                                            tint = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

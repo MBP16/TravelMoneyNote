@@ -219,7 +219,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = title,
                     totalAmount = totalAmount,
                     description = description,
-                    photoUri = photoUri
+                    photoUri = null,  // Deprecated field
+                    photoUris = photoUri  // New field for multiple URIs
                 )
             )
             val paymentEntities = payments.map { (personId, amount, method) ->
@@ -266,7 +267,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = title,
                     totalAmount = totalAmount,
                     description = description,
-                    photoUri = photoUri,
+                    photoUri = null,  // Deprecated field
+                    photoUris = photoUri,  // New field for multiple URIs
                     createdAt = createdAt
                 )
             )
@@ -462,7 +464,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = expense.title,
                     totalAmount = expense.totalAmount,
                     description = expense.description,
-                    photoUri = expense.photoUri,
+                    photoUri = null,  // Deprecated field
+                    photoUris = expense.photoUris ?: expense.photoUri,  // Use new field, fallback to old
                     createdAt = expense.createdAt,
                     payments = payments.map { payment ->
                         PaymentExport(
@@ -571,7 +574,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                     title = expense.title,
                                     totalAmount = expense.totalAmount,
                                     description = expense.description,
-                                    photoUri = expense.photoUri,
+                                    photoUri = null,  // Deprecated field
+                                    photoUris = expense.photoUris ?: expense.photoUri,  // Use new field, fallback to old
                                     createdAt = expense.createdAt
                                 )
                             )
