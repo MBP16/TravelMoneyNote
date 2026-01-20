@@ -256,7 +256,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (travelId <= 0) return
         viewModelScope.launch {
             // Get the original expense to preserve createdAt
-            val originalExpense = expenseDao.getAllExpenses().first().find { it.id == expenseId }
+            val originalExpense = expenseDao.getExpenseById(expenseId)
             val createdAt = originalExpense?.createdAt ?: System.currentTimeMillis()
             
             expenseDao.update(
