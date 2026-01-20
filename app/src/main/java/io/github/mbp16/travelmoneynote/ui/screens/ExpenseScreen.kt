@@ -337,7 +337,7 @@ fun ExpenseScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "사용자 (실제 소비 이용자)",
+                            text = "사용자",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f)
                         )
