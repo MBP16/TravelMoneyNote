@@ -80,6 +80,9 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE travelId = :travelId ORDER BY createdAt DESC")
     suspend fun getExpensesByTravelOnce(travelId: Long): List<Expense>
     
+    @Query("SELECT * FROM expenses WHERE id = :expenseId")
+    suspend fun getExpenseById(expenseId: Long): Expense?
+    
     @Insert
     suspend fun insert(expense: Expense): Long
     

@@ -255,6 +255,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val travelId = _selectedTravelId.value
         if (travelId <= 0) return
         viewModelScope.launch {
+            // Get the original expense to preserve createdAt
+            val originalExpense = expenseDao.getExpenseById(expenseId)
+            val createdAt = originalExpense?.createdAt ?: System.currentTimeMillis()
+            
             expenseDao.update(
                 Expense(
                     id = expenseId,
@@ -262,7 +266,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = title,
                     totalAmount = totalAmount,
                     description = description,
-                    photoUri = photoUri
+                    photoUri = photoUri,
+                    createdAt = createdAt
                 )
             )
             paymentDao.deletePaymentsForExpense(expenseId)

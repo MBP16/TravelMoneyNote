@@ -148,6 +148,18 @@ fun ExpenseScreen(
         }
     }
 
+    val copyFromPayments = {
+        expenseUsers = payments.mapNotNull { payment ->
+            payment.person?.let { person ->
+                ExpenseUserEntry(
+                    person = person,
+                    amount = payment.amount,
+                    description = ""
+                )
+            }
+        }
+    }
+
     val onSave = {
         if (isValid) {
             if (expenseId == null) {
@@ -246,7 +258,12 @@ fun ExpenseScreen(
                     Column(
                         modifier = Modifier.padding(16.dp)
                     ) {
-                        val baseText = "총 금액: ${if (totalAmount % 1.0 == 0.0) totalAmount.toInt() else totalAmount}$currencySymbol"
+                        val formattedAmount = if (totalAmount % 1.0 == 0.0) {
+                            totalAmount.toInt().toString()
+                        } else {
+                            String.format("%.2f", totalAmount).trimEnd('0').trimEnd('.')
+                        }
+                        val baseText = "총 금액: $formattedAmount$currencySymbol"
                         val displayText = if (showConversion) {
                             val converted = viewModel.convertToStandardCurrency(totalAmount, currentCurrency)
                             if (converted != null) {
@@ -320,13 +337,23 @@ fun ExpenseScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "사용자 (실제 소비 이용자)",
-                            style = MaterialTheme.typography.titleMedium
+                            text = "사용자",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.weight(1f)
                         )
-                        Button(
-                            onClick = divideEvenlyAmount,
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text("1/n 정산")
+                            OutlinedButton(
+                                onClick = copyFromPayments,
+                            ) {
+                                Text("결제내역 그대로")
+                            }
+                            Button(
+                                onClick = divideEvenlyAmount,
+                            ) {
+                                Text("1/n 정산")
+                            }
                         }
                     }
                 }
@@ -367,6 +394,16 @@ fun ExpenseScreen(
 
                 item {
                     if (totalUserAmount > 0 && kotlin.math.abs(totalAmount - totalUserAmount) > 0.01) {
+                        val formattedTotalAmount = if (totalAmount % 1.0 == 0.0) {
+                            totalAmount.toInt().toString()
+                        } else {
+                            String.format("%.2f", totalAmount).trimEnd('0').trimEnd('.')
+                        }
+                        val formattedTotalUserAmount = if (totalUserAmount % 1.0 == 0.0) {
+                            totalUserAmount.toInt().toString()
+                        } else {
+                            String.format("%.2f", totalUserAmount).trimEnd('0').trimEnd('.')
+                        }
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
@@ -374,7 +411,7 @@ fun ExpenseScreen(
                             )
                         ) {
                             Text(
-                                text = "⚠️ 결제 금액(${if (totalAmount % 1.0 == 0.0) totalAmount.toInt() else totalAmount}$currencySymbol)과 사용자 합계(${if (totalUserAmount % 1.0 == 0.0) totalUserAmount.toInt() else totalUserAmount}$currencySymbol)가 다릅니다",
+                                text = "⚠️ 결제 금액($formattedTotalAmount$currencySymbol)과 사용자 합계($formattedTotalUserAmount$currencySymbol)가 다릅니다",
                                 modifier = Modifier.padding(16.dp),
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
