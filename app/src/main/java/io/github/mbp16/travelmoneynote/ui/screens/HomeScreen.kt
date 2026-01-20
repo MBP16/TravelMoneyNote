@@ -278,7 +278,12 @@ fun PersonBalanceCard(
     var editName by remember { mutableStateOf(personWithBalance.person.name) }
     
     fun formatWithConversion(amount: Double): String {
-        val base = "${if (amount % 1.0 == 0.0) amount.toInt() else amount}$currencySymbol"
+        val formattedAmount = if (amount % 1.0 == 0.0) {
+            amount.toInt().toString()
+        } else {
+            String.format("%.2f", amount).trimEnd('0').trimEnd('.')
+        }
+        val base = "$formattedAmount$currencySymbol"
         if (!showConversion) return base
         val converted = convertToStandard(amount)
         return if (converted != null) {
@@ -428,7 +433,12 @@ fun ExpenseCard(
     var showDeleteDialog by remember { mutableStateOf(false) }
     
     fun formatWithConversion(amount: Double): String {
-        val base = "${if (amount % 1.0 == 0.0) amount.toInt() else amount}$currencySymbol"
+        val formattedAmount = if (amount % 1.0 == 0.0) {
+            amount.toInt().toString()
+        } else {
+            String.format("%.2f", amount).trimEnd('0').trimEnd('.')
+        }
+        val base = "$formattedAmount$currencySymbol"
         if (!showConversion) return base
         val converted = convertToStandard(amount)
         return if (converted != null) {

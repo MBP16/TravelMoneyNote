@@ -180,7 +180,11 @@ class TravelSummaryWidget : GlanceAppWidget() {
     @Composable
     private fun DataContent(data: WidgetData) {
         fun formatAmount(amount: Double): String {
-            return if (amount % 1.0 == 0.0) amount.toInt().toString() else amount.toString()
+            return if (amount % 1.0 == 0.0) {
+                amount.toInt().toString()
+            } else {
+                String.format("%.2f", amount).trimEnd('0').trimEnd('.')
+            }
         }
 
         Column(
