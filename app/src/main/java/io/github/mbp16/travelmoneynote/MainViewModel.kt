@@ -438,6 +438,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     
     suspend fun exportDataToJson(): String = withContext(Dispatchers.IO) {
         val allTravels = travelDao.getAllTravelsOnce()
+        val context = getApplication<Application>()
         val travelExports = allTravels.map { travel ->
             val persons = personDao.getPersonsByTravelOnce(travel.id)
             val personExports = persons.map { person ->
@@ -459,6 +460,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val expenseExports = expenses.map { expense ->
                 val payments = paymentDao.getPaymentsForExpenseOnce(expense.id)
                 val expenseUsers = expenseUserDao.getExpenseUsersForExpenseOnce(expense.id)
+                
+                // Read photo files and encode to base64
+                val photoUrisString = expense.photoUris ?: expense.photoUri
+                val photoDataList = if (!photoUrisString.isNullOrEmpty()) {
+                    photoUrisString.split(",").mapNotNull { uriString ->
+                        try {
+                            val uri = android.net.Uri.parse(uriString.trim())
+                            val file = java.io.File(uri.path ?: return@mapNotNull null)
+                            if (file.exists() && file.canRead()) {
+                                val bytes = file.readBytes()
+                                android.util.Base64.encodeToString(bytes, android.util.Base64.DEFAULT)
+                            } else null
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+                } else null
+                
                 ExpenseExport(
                     id = expense.id,
                     title = expense.title,
@@ -466,6 +485,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     description = expense.description,
                     photoUri = null,  // Deprecated field
                     photoUris = expense.photoUris ?: expense.photoUri,  // Use new field, fallback to old
+                    photoData = photoDataList,  // Base64 encoded photos
                     createdAt = expense.createdAt,
                     payments = payments.map { payment ->
                         PaymentExport(
@@ -568,6 +588,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                         
                         for (expense in travel.expenses) {
+                            // Restore photos from base64 data if available
+                            val photoUrisString = if (!expense.photoData.isNullOrEmpty()) {
+                                val context = getApplication<Application>()
+                                val restoredUris = expense.photoData.mapIndexedNotNull { index, base64Data ->
+                                    try {
+                                        val bytes = android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)
+                                        val timeStamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(java.util.Date())
+                                        val imageFile = java.io.File(context.filesDir, "IMPORTED_${timeStamp}_$index.jpg")
+                                        imageFile.writeBytes(bytes)
+                                        imageFile.absolutePath
+                                    } catch (e: Exception) {
+                                        null
+                                    }
+                                }
+                                if (restoredUris.isNotEmpty()) {
+                                    restoredUris.joinToString(",")
+                                } else {
+                                    expense.photoUris ?: expense.photoUri
+                                }
+                            } else {
+                                expense.photoUris ?: expense.photoUri
+                            }
+                            
                             val newExpenseId = expenseDao.insert(
                                 Expense(
                                     travelId = newTravelId,
@@ -575,7 +618,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                     totalAmount = expense.totalAmount,
                                     description = expense.description,
                                     photoUri = null,  // Deprecated field
-                                    photoUris = expense.photoUris ?: expense.photoUri,  // Use new field, fallback to old
+                                    photoUris = photoUrisString,  // Use restored photo URIs
                                     createdAt = expense.createdAt
                                 )
                             )
