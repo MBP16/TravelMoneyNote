@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
@@ -472,6 +473,7 @@ fun SettingsScreen(
     }
     
     if (showImportConfirmDialog && pendingImportData != null) {
+        val importData = pendingImportData ?: return
         AlertDialog(
             onDismissRequest = { 
                 showImportConfirmDialog = false
@@ -484,12 +486,12 @@ fun SettingsScreen(
                     Text("다음 여행들을 추가합니다:")
                     Spacer(modifier = Modifier.height(8.dp))
                     LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
-                        items(pendingImportData!!.travels) { travel ->
+                        items(importData.travels) { travel ->
                             Column(modifier = Modifier.padding(vertical = 4.dp)) {
                                 Text(
                                     text = travel.name,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                    fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = "${dateFormatter.format(Date(travel.startDate))} ~ ${dateFormatter.format(Date(travel.endDate))}",
