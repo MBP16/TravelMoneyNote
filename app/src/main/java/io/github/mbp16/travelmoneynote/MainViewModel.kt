@@ -656,6 +656,58 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
+    suspend fun parseExportFile(uri: Uri): ExportData? {
+        return try {
+            val context = getApplication<Application>()
+            
+            // Detect file type by trying to read as ZIP first
+            val isZipFile = withContext(Dispatchers.IO) {
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        val bytes = ByteArray(4)
+                        val read = inputStream.read(bytes)
+                        // ZIP file signature: 0x50 0x4B 0x03 0x04 (PK..)
+                        read == 4 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4B.toByte() &&
+                                bytes[2] == 0x03.toByte() && bytes[3] == 0x04.toByte()
+                    } ?: false
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            
+            val jsonData = withContext(Dispatchers.IO) {
+                if (isZipFile) {
+                    // Parse ZIP file to get data.json
+                    var jsonContent: String? = null
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        ZipInputStream(inputStream).use { zipIn ->
+                            var entry: ZipEntry? = zipIn.nextEntry
+                            while (entry != null) {
+                                if (!entry.isDirectory && entry.name == "data.json") {
+                                    jsonContent = zipIn.bufferedReader().readText()
+                                    break
+                                }
+                                zipIn.closeEntry()
+                                entry = zipIn.nextEntry
+                            }
+                        }
+                    }
+                    jsonContent ?: throw Exception("ZIP 파일에 data.json이 없습니다")
+                } else {
+                    // Parse JSON file directly
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        stream.bufferedReader().readText()
+                    } ?: throw Exception("파일을 읽을 수 없습니다")
+                }
+            }
+            
+            json.decodeFromString<ExportData>(jsonData)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+    
     fun importFromFile(uri: Uri, onComplete: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
@@ -701,7 +753,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val exportData = json.decodeFromString<ExportData>(jsonData)
             
             withContext(Dispatchers.IO) {
-                database.clearAllTables()
+                // Don't clear database - just add new travels
                 
                 val travelIdMap = mutableMapOf<Long, Long>()
                 val personIdMap = mutableMapOf<Long, Long>()
@@ -782,7 +834,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _standardCurrency.value = exportData.standardCurrency
             }
             
-            selectTravel(-1L)
+            // Don't reset selected travel to -1, keep current selection
             onComplete(true, "데이터를 성공적으로 불러왔습니다")
         } catch (e: Exception) {
             e.printStackTrace()
@@ -833,7 +885,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 
                 val exportData = json.decodeFromString<ExportData>(jsonData)
                 
-                database.clearAllTables()
+                // Don't clear database - just add new travels
                 
                 val travelIdMap = mutableMapOf<Long, Long>()
                 val personIdMap = mutableMapOf<Long, Long>()
@@ -940,7 +992,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _standardCurrency.value = exportData.standardCurrency
             }
             
-            selectTravel(-1L)
+            // Don't reset selected travel to -1, keep current selection
             onComplete(true, "데이터를 성공적으로 불러왔습니다")
         } catch (e: Exception) {
             e.printStackTrace()

@@ -66,10 +66,12 @@ fun SettingsScreen(
     var showExportSelectDialog by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
     var pendingExportUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var pendingImportData by remember { mutableStateOf<io.github.mbp16.travelmoneynote.data.ExportData?>(null) }
     
     val context = LocalContext.current
     val dateFormatter = remember { SimpleDateFormat("yyyy.MM.dd", Locale.getDefault()) }
     val fileNameFormatter = remember { SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()) }
+    val coroutineScope = rememberCoroutineScope()
     
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/zip")
@@ -85,7 +87,16 @@ fun SettingsScreen(
     ) { uri ->
         uri?.let {
             pendingImportUri = it
-            showImportConfirmDialog = true
+            // Parse the file first to show preview
+            coroutineScope.launch {
+                val exportData = viewModel.parseExportFile(it)
+                if (exportData != null) {
+                    pendingImportData = exportData
+                    showImportConfirmDialog = true
+                } else {
+                    Toast.makeText(context, "파일을 읽을 수 없습니다", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -459,14 +470,43 @@ fun SettingsScreen(
         )
     }
     
-    if (showImportConfirmDialog) {
+    if (showImportConfirmDialog && pendingImportData != null) {
         AlertDialog(
             onDismissRequest = { 
                 showImportConfirmDialog = false
                 pendingImportUri = null
+                pendingImportData = null
             },
             title = { Text("데이터 불러오기") },
-            text = { Text("기존 데이터가 모두 삭제되고 파일의 데이터로 대체됩니다.\n계속하시겠습니까?") },
+            text = {
+                Column {
+                    Text("다음 여행들을 추가합니다:")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+                        items(pendingImportData!!.travels) { travel ->
+                            Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                Text(
+                                    text = travel.name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                                )
+                                Text(
+                                    text = "${dateFormatter.format(Date(travel.startDate))} ~ ${dateFormatter.format(Date(travel.endDate))}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                if (travel.persons.isNotEmpty()) {
+                                    Text(
+                                        text = "참가자: ${travel.persons.joinToString(", ") { it.name }}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -477,6 +517,7 @@ fun SettingsScreen(
                         }
                         showImportConfirmDialog = false
                         pendingImportUri = null
+                        pendingImportData = null
                     }
                 ) {
                     Text("불러오기")
@@ -486,6 +527,7 @@ fun SettingsScreen(
                 TextButton(onClick = { 
                     showImportConfirmDialog = false
                     pendingImportUri = null
+                    pendingImportData = null
                 }) {
                     Text("취소")
                 }
