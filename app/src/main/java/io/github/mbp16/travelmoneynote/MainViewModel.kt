@@ -223,8 +223,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = title,
                     totalAmount = totalAmount,
                     description = description,
-                    photoUri = null,  // Deprecated field
-                    photoUris = photoUri  // New field for multiple URIs
+                    photoUris = photoUri
                 )
             )
             val paymentEntities = payments.map { (personId, amount, method) ->
@@ -271,8 +270,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = title,
                     totalAmount = totalAmount,
                     description = description,
-                    photoUri = null,  // Deprecated field
-                    photoUris = photoUri,  // New field for multiple URIs
+                    photoUris = photoUri,
                     createdAt = createdAt
                 )
             )
@@ -468,8 +466,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = expense.title,
                     totalAmount = expense.totalAmount,
                     description = expense.description,
-                    photoUri = null,  // Deprecated field
-                    photoUris = expense.photoUris ?: expense.photoUri,  // Use new field, fallback to old
+                    photoUris = expense.photoUris,
                     createdAt = expense.createdAt,
                     payments = payments.map { payment ->
                         PaymentExport(
