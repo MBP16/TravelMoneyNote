@@ -506,7 +506,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         json.encodeToString(exportData)
     }
     
-    fun exportToFile(uri: Uri, onComplete: (Boolean) -> Unit) {
+    fun getPersonsForTravel(travelId: Long, onResult: (List<Person>) -> Unit) {
+        viewModelScope.launch {
+            val persons = withContext(Dispatchers.IO) {
+                personDao.getPersonsByTravelOnce(travelId)
+            }
+            onResult(persons)
+        }
+    }
+    
+    fun exportToFile(uri: Uri, travelIds: List<Long>, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
                 val context = getApplication<Application>()
@@ -517,8 +526,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             val photoMap = mutableMapOf<String, String>() // original URI -> relative path in ZIP
                             var photoCounter = 0
                             
-                            // Get all expenses and process their photos
-                            val allTravels = travelDao.getAllTravelsOnce()
+                            // Get only selected travels and process their photos
+                            val allTravels = travelDao.getAllTravelsOnce().filter { it.id in travelIds }
                             for (travel in allTravels) {
                                 val expenses = expenseDao.getExpensesByTravelOnce(travel.id)
                                 for (expense in expenses) {

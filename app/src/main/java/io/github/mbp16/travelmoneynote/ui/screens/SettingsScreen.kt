@@ -63,7 +63,9 @@ fun SettingsScreen(
     var showEditTravelDialog by remember { mutableStateOf<Travel?>(null) }
     var showDeleteTravelDialog by remember { mutableStateOf<Travel?>(null) }
     var showImportConfirmDialog by remember { mutableStateOf(false) }
+    var showExportSelectDialog by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var pendingExportUri by remember { mutableStateOf<android.net.Uri?>(null) }
     
     val context = LocalContext.current
     val dateFormatter = remember { SimpleDateFormat("yyyy.MM.dd", Locale.getDefault()) }
@@ -73,13 +75,8 @@ fun SettingsScreen(
         ActivityResultContracts.CreateDocument("application/zip")
     ) { uri ->
         uri?.let {
-            viewModel.exportToFile(it) { success ->
-                Toast.makeText(
-                    context,
-                    if (success) "내보내기 완료" else "내보내기 실패",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+            pendingExportUri = it
+            showExportSelectDialog = true
         }
     }
     
@@ -495,6 +492,30 @@ fun SettingsScreen(
             }
         )
     }
+    
+    if (showExportSelectDialog) {
+        ExportTravelSelectDialog(
+            travels = travels,
+            viewModel = viewModel,
+            onDismiss = {
+                showExportSelectDialog = false
+                pendingExportUri = null
+            },
+            onConfirm = { selectedTravelIds ->
+                pendingExportUri?.let { uri ->
+                    viewModel.exportToFile(uri, selectedTravelIds) { success ->
+                        Toast.makeText(
+                            context,
+                            if (success) "내보내기 완료" else "내보내기 실패",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                showExportSelectDialog = false
+                pendingExportUri = null
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -653,4 +674,94 @@ private fun TravelDialog(
             DatePicker(state = datePickerState)
         }
     }
+}
+
+@Composable
+private fun ExportTravelSelectDialog(
+    travels: List<Travel>,
+    viewModel: MainViewModel,
+    onDismiss: () -> Unit,
+    onConfirm: (List<Long>) -> Unit
+) {
+    var selectedTravelIds by remember { mutableStateOf(travels.map { it.id }.toSet()) }
+    val personsMap = remember { mutableStateMapOf<Long, List<String>>() }
+    val dateFormatter = remember { SimpleDateFormat("yyyy.MM.dd", Locale.getDefault()) }
+    
+    // Fetch persons for each travel
+    LaunchedEffect(travels) {
+        travels.forEach { travel ->
+            viewModel.getPersonsForTravel(travel.id) { persons ->
+                personsMap[travel.id] = persons.map { it.name }
+            }
+        }
+    }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("내보낼 여행 선택") },
+        text = {
+            LazyColumn {
+                items(travels) { travel ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                selectedTravelIds = if (travel.id in selectedTravelIds) {
+                                    selectedTravelIds - travel.id
+                                } else {
+                                    selectedTravelIds + travel.id
+                                }
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = travel.id in selectedTravelIds,
+                            onCheckedChange = { checked ->
+                                selectedTravelIds = if (checked) {
+                                    selectedTravelIds + travel.id
+                                } else {
+                                    selectedTravelIds - travel.id
+                                }
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = travel.name,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = "${dateFormatter.format(Date(travel.startDate))} ~ ${dateFormatter.format(Date(travel.endDate))}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            personsMap[travel.id]?.let { persons ->
+                                if (persons.isNotEmpty()) {
+                                    Text(
+                                        text = "참가자: ${persons.joinToString(", ")}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(selectedTravelIds.toList()) },
+                enabled = selectedTravelIds.isNotEmpty()
+            ) {
+                Text("내보내기")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("취소")
+            }
+        }
+    )
 }
