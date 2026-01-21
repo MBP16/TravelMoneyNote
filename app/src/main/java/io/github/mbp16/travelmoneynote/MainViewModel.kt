@@ -497,8 +497,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
         val exportData = ExportData(
-            travels = travelExports,
-            standardCurrency = _standardCurrency.value
+            travels = travelExports
         )
         json.encodeToString(exportData)
     }
@@ -632,8 +631,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 )
                             }
                             val exportData = ExportData(
-                                travels = travelExports,
-                                standardCurrency = _standardCurrency.value
+                                travels = travelExports
                             )
                             val jsonData = json.encodeToString(exportData)
                             
@@ -826,9 +824,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 }
-                
-                prefs.edit().putString("standardCurrency", exportData.standardCurrency).apply()
-                _standardCurrency.value = exportData.standardCurrency
             }
             
             // Don't reset selected travel to -1, keep current selection
@@ -984,9 +979,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 
                 // Clean up temporary directory
                 photosDir.deleteRecursively()
-                
-                prefs.edit().putString("standardCurrency", exportData.standardCurrency).apply()
-                _standardCurrency.value = exportData.standardCurrency
             }
             
             // Don't reset selected travel to -1, keep current selection
