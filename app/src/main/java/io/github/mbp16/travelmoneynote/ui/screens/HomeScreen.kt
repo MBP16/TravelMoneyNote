@@ -502,9 +502,9 @@ fun ExpenseCard(
                     )
                 }
                 
-                if (expense.photoUri != null || expense.photoUris != null) {
+                if (expense.photoUris != null) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    val photoCount = (expense.photoUris ?: expense.photoUri)?.split(",")?.size ?: 0
+                    val photoCount = expense.photoUris?.split(",")?.size ?: 0
                     Text(
                         text = if (photoCount > 1) "📷 사진 ${photoCount}장 첨부됨" else "📷 사진 첨부됨",
                         style = MaterialTheme.typography.bodySmall,
