@@ -10,6 +10,7 @@ on:
 
 jobs:
   apk:
+    if: github.event_name != 'release'
     name: Generate APK
     runs-on: ubuntu-latest
     steps:
@@ -28,7 +29,6 @@ jobs:
           path: app/build/outputs/apk/debug
           
   deploy:
-    needs: apk
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     steps:
