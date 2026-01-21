@@ -223,8 +223,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = title,
                     totalAmount = totalAmount,
                     description = description,
-                    photoUri = null,  // Deprecated field
-                    photoUris = photoUri  // New field for multiple URIs
+                    photoUris = photoUri
                 )
             )
             val paymentEntities = payments.map { (personId, amount, method) ->
@@ -271,8 +270,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = title,
                     totalAmount = totalAmount,
                     description = description,
-                    photoUri = null,  // Deprecated field
-                    photoUris = photoUri,  // New field for multiple URIs
+                    photoUris = photoUri,
                     createdAt = createdAt
                 )
             )
@@ -468,8 +466,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = expense.title,
                     totalAmount = expense.totalAmount,
                     description = expense.description,
-                    photoUri = null,  // Deprecated field
-                    photoUris = expense.photoUris ?: expense.photoUri,  // Use new field, fallback to old
+                    photoUris = expense.photoUris,
                     createdAt = expense.createdAt,
                     payments = payments.map { payment ->
                         PaymentExport(
@@ -500,13 +497,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
         val exportData = ExportData(
-            travels = travelExports,
-            standardCurrency = _standardCurrency.value
+            travels = travelExports
         )
         json.encodeToString(exportData)
     }
     
-    fun exportToFile(uri: Uri, onComplete: (Boolean) -> Unit) {
+    fun getPersonsForTravel(travelId: Long, onResult: (List<Person>) -> Unit) {
+        viewModelScope.launch {
+            val persons = withContext(Dispatchers.IO) {
+                personDao.getPersonsByTravelOnce(travelId)
+            }
+            onResult(persons)
+        }
+    }
+    
+    fun exportToFile(uri: Uri, travelIds: List<Long>, onComplete: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
                 val context = getApplication<Application>()
@@ -517,12 +522,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             val photoMap = mutableMapOf<String, String>() // original URI -> relative path in ZIP
                             var photoCounter = 0
                             
-                            // Get all expenses and process their photos
-                            val allTravels = travelDao.getAllTravelsOnce()
+                            // Get only selected travels and process their photos
+                            val allTravels = travelDao.getAllTravelsOnce().filter { it.id in travelIds }
                             for (travel in allTravels) {
                                 val expenses = expenseDao.getExpensesByTravelOnce(travel.id)
                                 for (expense in expenses) {
-                                    val photoUrisStr = expense.photoUris ?: expense.photoUri
+                                    val photoUrisStr = expense.photoUris
                                     if (!photoUrisStr.isNullOrBlank()) {
                                         // Handle comma-separated URIs
                                         val uris = photoUrisStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -582,7 +587,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                     val expenseUsers = expenseUserDao.getExpenseUsersForExpenseOnce(expense.id)
                                     
                                     // Convert absolute URIs to relative paths
-                                    val photoUrisStr = expense.photoUris ?: expense.photoUri
+                                    val photoUrisStr = expense.photoUris
                                     val relativePhotoUris = if (!photoUrisStr.isNullOrBlank()) {
                                         val uris = photoUrisStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
                                         uris.mapNotNull { photoMap[it] }.joinToString(",")
@@ -590,15 +595,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                         null
                                     }
                                     
-                                    // For backward compatibility, set photoUri to first photo
-                                    val firstPhotoUri = relativePhotoUris?.split(",")?.firstOrNull()
-                                    
                                     ExpenseExport(
                                         id = expense.id,
                                         title = expense.title,
                                         totalAmount = expense.totalAmount,
                                         description = expense.description,
-                                        photoUri = firstPhotoUri,
                                         photoUris = relativePhotoUris,
                                         createdAt = expense.createdAt,
                                         payments = payments.map { payment ->
@@ -630,8 +631,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 )
                             }
                             val exportData = ExportData(
-                                travels = travelExports,
-                                standardCurrency = _standardCurrency.value
+                                travels = travelExports
                             )
                             val jsonData = json.encodeToString(exportData)
                             
@@ -648,6 +648,58 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 e.printStackTrace()
                 onComplete(false)
             }
+        }
+    }
+    
+    suspend fun parseExportFile(uri: Uri): ExportData? {
+        return try {
+            val context = getApplication<Application>()
+            
+            // Detect file type by trying to read as ZIP first
+            val isZipFile = withContext(Dispatchers.IO) {
+                try {
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        val bytes = ByteArray(4)
+                        val read = inputStream.read(bytes)
+                        // ZIP file signature: 0x50 0x4B 0x03 0x04 (PK..)
+                        read == 4 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4B.toByte() &&
+                                bytes[2] == 0x03.toByte() && bytes[3] == 0x04.toByte()
+                    } ?: false
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            
+            val jsonData = withContext(Dispatchers.IO) {
+                if (isZipFile) {
+                    // Parse ZIP file to get data.json
+                    var jsonContent: String? = null
+                    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                        ZipInputStream(inputStream).use { zipIn ->
+                            var entry: ZipEntry? = zipIn.nextEntry
+                            while (entry != null) {
+                                if (!entry.isDirectory && entry.name == "data.json") {
+                                    jsonContent = zipIn.bufferedReader().readText()
+                                    break
+                                }
+                                zipIn.closeEntry()
+                                entry = zipIn.nextEntry
+                            }
+                        }
+                    }
+                    jsonContent ?: throw Exception("ZIP 파일에 data.json이 없습니다")
+                } else {
+                    // Parse JSON file directly
+                    context.contentResolver.openInputStream(uri)?.use { stream ->
+                        stream.bufferedReader().readText()
+                    } ?: throw Exception("파일을 읽을 수 없습니다")
+                }
+            }
+            
+            json.decodeFromString<ExportData>(jsonData)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
     }
     
@@ -696,7 +748,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val exportData = json.decodeFromString<ExportData>(jsonData)
             
             withContext(Dispatchers.IO) {
-                database.clearAllTables()
+                // Don't clear database - just add new travels
                 
                 val travelIdMap = mutableMapOf<Long, Long>()
                 val personIdMap = mutableMapOf<Long, Long>()
@@ -734,8 +786,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     
                     for (expense in travel.expenses) {
-                        val photoUrisValue = expense.photoUris ?: expense.photoUri
-                        val firstPhotoUri = photoUrisValue?.split(",")?.firstOrNull()
+                        val photoUrisValue = expense.photoUris
                         
                         val newExpenseId = expenseDao.insert(
                             Expense(
@@ -743,7 +794,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 title = expense.title,
                                 totalAmount = expense.totalAmount,
                                 description = expense.description,
-                                photoUri = firstPhotoUri,
                                 photoUris = photoUrisValue,
                                 createdAt = expense.createdAt
                             )
@@ -774,12 +824,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 }
-                
-                prefs.edit().putString("standardCurrency", exportData.standardCurrency).apply()
-                _standardCurrency.value = exportData.standardCurrency
             }
             
-            selectTravel(-1L)
+            // Don't reset selected travel to -1, keep current selection
             onComplete(true, "데이터를 성공적으로 불러왔습니다")
         } catch (e: Exception) {
             e.printStackTrace()
@@ -830,7 +877,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 
                 val exportData = json.decodeFromString<ExportData>(jsonData)
                 
-                database.clearAllTables()
+                // Don't clear database - just add new travels
                 
                 val travelIdMap = mutableMapOf<Long, Long>()
                 val personIdMap = mutableMapOf<Long, Long>()
@@ -873,7 +920,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     
                     for (expense in travel.expenses) {
                         // Process photo URIs - convert relative paths to absolute URIs
-                        val photoUrisStr = expense.photoUris ?: expense.photoUri
+                        val photoUrisStr = expense.photoUris
                         val newPhotoUris = if (!photoUrisStr.isNullOrBlank()) {
                             val relativePaths = photoUrisStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
                             var photoIndex = 0
@@ -893,15 +940,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             null
                         }
                         
-                        val firstPhotoUri = newPhotoUris?.split(",")?.firstOrNull()
-                        
                         val newExpenseId = expenseDao.insert(
                             Expense(
                                 travelId = newTravelId,
                                 title = expense.title,
                                 totalAmount = expense.totalAmount,
                                 description = expense.description,
-                                photoUri = firstPhotoUri,
                                 photoUris = newPhotoUris,
                                 createdAt = expense.createdAt
                             )
@@ -935,12 +979,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 
                 // Clean up temporary directory
                 photosDir.deleteRecursively()
-                
-                prefs.edit().putString("standardCurrency", exportData.standardCurrency).apply()
-                _standardCurrency.value = exportData.standardCurrency
             }
             
-            selectTravel(-1L)
+            // Don't reset selected travel to -1, keep current selection
             onComplete(true, "데이터를 성공적으로 불러왔습니다")
         } catch (e: Exception) {
             e.printStackTrace()

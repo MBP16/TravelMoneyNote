@@ -84,8 +84,8 @@ fun ExpenseScreen(
         if (!isInitialized && expenseId != null && expenseWithPayments != null && persons.isNotEmpty()) {
             title = expenseWithPayments.expense.title
             description = expenseWithPayments.expense.description
-            // Load photos from photoUris field (new) or photoUri field (old) for backward compatibility
-            val urisString = expenseWithPayments.expense.photoUris ?: expenseWithPayments.expense.photoUri
+            // Load photos from photoUris field
+            val urisString = expenseWithPayments.expense.photoUris
             photoUris = if (!urisString.isNullOrEmpty()) {
                 urisString.split(",").mapNotNull { uri ->
                     if (uri.isNotBlank()) Uri.parse(uri.trim()) else null

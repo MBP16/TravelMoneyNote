@@ -4,10 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ExportData(
-    val version: Int = 1,
     val exportedAt: Long = System.currentTimeMillis(),
-    val travels: List<TravelExport>,
-    val standardCurrency: String
+    val travels: List<TravelExport>
 )
 
 @Serializable
@@ -42,8 +40,7 @@ data class ExpenseExport(
     val title: String = "",
     val totalAmount: Double,
     val description: String,
-    val photoUri: String?,  // Deprecated: kept for backward compatibility
-    val photoUris: String? = null,  // New: comma-separated list of photo URIs
+    val photoUris: String? = null,
     val createdAt: Long,
     val payments: List<PaymentExport>,
     val expenseUsers: List<ExpenseUserExport> = emptyList()
