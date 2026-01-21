@@ -74,7 +74,8 @@ data class Expense(
     val title: String = "",
     val totalAmount: Double,
     val description: String = "",
-    val photoUri: String? = null,
+    val photoUri: String? = null,  // Deprecated: kept for backward compatibility
+    val photoUris: String? = null,  // New: comma-separated list of photo URIs
     val createdAt: Long = System.currentTimeMillis()
 )
 

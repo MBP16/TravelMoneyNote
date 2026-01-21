@@ -42,7 +42,8 @@ data class ExpenseExport(
     val title: String = "",
     val totalAmount: Double,
     val description: String,
-    val photoUri: String?,
+    val photoUri: String?,  // Deprecated: kept for backward compatibility
+    val photoUris: String? = null,  // New: comma-separated list of photo URIs
     val createdAt: Long,
     val payments: List<PaymentExport>,
     val expenseUsers: List<ExpenseUserExport> = emptyList()
