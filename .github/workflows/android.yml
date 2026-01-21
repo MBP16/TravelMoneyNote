@@ -48,9 +48,9 @@ jobs:
       - name: Build Release AAB
         run: ./gradlew bundleRelease
         env:
-          SIGNING_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          SIGNING_KEY_ALIAS: ${{ secrets.ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          SIGNING_STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          SIGNING_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
           
       # 구글 플레이는 파일명으로 언어를 구분합니다 (예: whatsnew-ko-KR)
       - name: Create What is New file from Release Notes
