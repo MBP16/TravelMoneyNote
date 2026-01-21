@@ -101,6 +101,6 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: io.github.mbp16.travelmoneynote
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
-          track: internal
+          track: alpha
           status: completed # (선택) draft로 올리면 콘솔에서 검토 후 배포 가능, 즉시 배포 원하면 completed
           whatsNewDirectory: distribution/whatsnew # (선택) 변경사항 텍스트 폴더
