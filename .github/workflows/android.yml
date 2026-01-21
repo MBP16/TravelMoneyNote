@@ -44,7 +44,7 @@ jobs:
         env:
           SIGNING_KEY : ${{ secrets.SIGNING_KEY }}
         run: |
-          echo $SIGNING_KEY | base64 --decode > app/keystore.jks
+          echo -n $SIGNING_KEY | base64 -di > app/keystore.jks
 
       # 2. 릴리즈용 AAB 빌드
       # build.gradle에서 환경변수로 키스토어 정보를 읽도록 설정되어 있어야 함
