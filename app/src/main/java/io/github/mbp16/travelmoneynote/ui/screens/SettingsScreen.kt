@@ -70,7 +70,7 @@ fun SettingsScreen(
     val fileNameFormatter = remember { SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()) }
     
     val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/zip")
+        ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
         uri?.let {
             viewModel.exportToFile(it) { success ->
@@ -284,7 +284,7 @@ fun SettingsScreen(
                             )
                         )
                         .clickable {
-                            val fileName = "travel_money_note_${fileNameFormatter.format(Date())}.zip"
+                            val fileName = "travel_money_note_${fileNameFormatter.format(Date())}.json"
                             exportLauncher.launch(fileName)
                         }
                 ) {
