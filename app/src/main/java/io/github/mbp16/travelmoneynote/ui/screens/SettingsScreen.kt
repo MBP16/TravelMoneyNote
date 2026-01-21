@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.Travel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
