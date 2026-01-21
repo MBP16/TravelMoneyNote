@@ -522,7 +522,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             for (travel in allTravels) {
                                 val expenses = expenseDao.getExpensesByTravelOnce(travel.id)
                                 for (expense in expenses) {
-                                    val photoUrisStr = expense.photoUris ?: expense.photoUri
+                                    val photoUrisStr = expense.photoUris
                                     if (!photoUrisStr.isNullOrBlank()) {
                                         // Handle comma-separated URIs
                                         val uris = photoUrisStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -582,7 +582,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                     val expenseUsers = expenseUserDao.getExpenseUsersForExpenseOnce(expense.id)
                                     
                                     // Convert absolute URIs to relative paths
-                                    val photoUrisStr = expense.photoUris ?: expense.photoUri
+                                    val photoUrisStr = expense.photoUris
                                     val relativePhotoUris = if (!photoUrisStr.isNullOrBlank()) {
                                         val uris = photoUrisStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
                                         uris.mapNotNull { photoMap[it] }.joinToString(",")
@@ -590,15 +590,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                         null
                                     }
                                     
-                                    // For backward compatibility, set photoUri to first photo
-                                    val firstPhotoUri = relativePhotoUris?.split(",")?.firstOrNull()
-                                    
                                     ExpenseExport(
                                         id = expense.id,
                                         title = expense.title,
                                         totalAmount = expense.totalAmount,
                                         description = expense.description,
-                                        photoUri = firstPhotoUri,
                                         photoUris = relativePhotoUris,
                                         createdAt = expense.createdAt,
                                         payments = payments.map { payment ->
@@ -734,8 +730,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     
                     for (expense in travel.expenses) {
-                        val photoUrisValue = expense.photoUris ?: expense.photoUri
-                        val firstPhotoUri = photoUrisValue?.split(",")?.firstOrNull()
+                        val photoUrisValue = expense.photoUris
                         
                         val newExpenseId = expenseDao.insert(
                             Expense(
@@ -743,7 +738,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 title = expense.title,
                                 totalAmount = expense.totalAmount,
                                 description = expense.description,
-                                photoUri = firstPhotoUri,
                                 photoUris = photoUrisValue,
                                 createdAt = expense.createdAt
                             )
@@ -873,7 +867,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     
                     for (expense in travel.expenses) {
                         // Process photo URIs - convert relative paths to absolute URIs
-                        val photoUrisStr = expense.photoUris ?: expense.photoUri
+                        val photoUrisStr = expense.photoUris
                         val newPhotoUris = if (!photoUrisStr.isNullOrBlank()) {
                             val relativePaths = photoUrisStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
                             var photoIndex = 0
@@ -893,15 +887,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             null
                         }
                         
-                        val firstPhotoUri = newPhotoUris?.split(",")?.firstOrNull()
-                        
                         val newExpenseId = expenseDao.insert(
                             Expense(
                                 travelId = newTravelId,
                                 title = expense.title,
                                 totalAmount = expense.totalAmount,
                                 description = expense.description,
-                                photoUri = firstPhotoUri,
                                 photoUris = newPhotoUris,
                                 createdAt = expense.createdAt
                             )
