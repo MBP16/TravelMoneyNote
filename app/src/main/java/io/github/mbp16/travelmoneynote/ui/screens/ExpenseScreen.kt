@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -31,6 +32,7 @@ import coil.compose.rememberAsyncImagePainter
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.PaymentMethod
 import io.github.mbp16.travelmoneynote.data.Person
+import io.github.mbp16.travelmoneynote.ui.components.ImageViewerDialog
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -72,6 +74,7 @@ fun ExpenseScreen(
     var description by remember { mutableStateOf("") }
     var photoUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var tempPhotoUri by rememberSaveable { mutableStateOf<Uri?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var payments by remember { mutableStateOf(listOf(PaymentEntry(null, "", PaymentMethod.CASH))) }
     var expenseUsers by remember { mutableStateOf(listOf(ExpenseUserEntry(null, "", ""))) }
     var isInitialized by remember { mutableStateOf(false) }
@@ -482,7 +485,9 @@ fun ExpenseScreen(
                                     Image(
                                         painter = rememberAsyncImagePainter(uri),
                                         contentDescription = "영수증 사진 ${index + 1}",
-                                        modifier = Modifier.fillMaxSize(),
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clickable { selectedImageUri = uri },
                                         contentScale = ContentScale.Crop
                                     )
                                     IconButton(
@@ -516,6 +521,14 @@ fun ExpenseScreen(
                 )
             }
         }
+    }
+    
+    // Show image viewer dialog when an image is selected
+    selectedImageUri?.let { uri ->
+        ImageViewerDialog(
+            imageUri = uri,
+            onDismiss = { selectedImageUri = null }
+        )
     }
 }
 
