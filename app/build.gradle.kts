@@ -31,29 +31,8 @@ android {
         compose = true
     }
 
-    val ciKeystoreFile = file("keystore.jks")
-
-    signingConfigs {
-        create("release") {
-            if (ciKeystoreFile.exists()) {
-                storeFile = ciKeystoreFile
-                storePassword = System.getenv("SIGNING_STORE_PASSWORD")
-                keyAlias = System.getenv("SIGNING_KEY_ALIAS")
-                keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
-            }
-        }
-    }
-
     buildTypes {
         getByName("release") {
-            // [추가 3] CI 환경일 때만 서명 설정 적용!
-            // 로컬(내 컴퓨터)에는 파일이 없으므로 이 부분이 무시됩니다.
-            // -> 따라서 로컬에선 Android Studio GUI로 빌드할 수 있게 됩니다.
-            if (ciKeystoreFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
-
-            // === [원래 있던 코드 유지] ===
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
