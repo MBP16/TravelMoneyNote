@@ -828,7 +828,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     throw Exception("ZIP 파일에 data.json이 없습니다")
                 }
                 
-                val exportData = json.decodeFromString<ExportData>(jsonData!!)
+                val exportData = json.decodeFromString<ExportData>(jsonData)
                 
                 database.clearAllTables()
                 
@@ -876,12 +876,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         val photoUrisStr = expense.photoUris ?: expense.photoUri
                         val newPhotoUris = if (!photoUrisStr.isNullOrBlank()) {
                             val relativePaths = photoUrisStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                            var photoIndex = 0
                             val absoluteUris = relativePaths.mapNotNull { relativePath ->
                                 photoFiles[relativePath]?.let { tempFile ->
-                                    // Copy to permanent storage
+                                    // Copy to permanent storage with unique filename
                                     val timestamp = System.currentTimeMillis()
                                     val extension = tempFile.extension
-                                    val permanentFile = File(permanentPhotosDir, "photo_${timestamp}_${tempFile.name}")
+                                    val permanentFile = File(permanentPhotosDir, "expense_${expense.id}_${photoIndex}_${timestamp}.$extension")
+                                    photoIndex++
                                     tempFile.copyTo(permanentFile, overwrite = true)
                                     Uri.fromFile(permanentFile).toString()
                                 }
