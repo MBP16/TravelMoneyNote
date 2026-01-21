@@ -590,12 +590,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                         null
                                     }
                                     
+                                    // For backward compatibility, set photoUri to first photo
+                                    val firstPhotoUri = relativePhotoUris?.split(",")?.firstOrNull()
+                                    
                                     ExpenseExport(
                                         id = expense.id,
                                         title = expense.title,
                                         totalAmount = expense.totalAmount,
                                         description = expense.description,
-                                        photoUri = null,
+                                        photoUri = firstPhotoUri,
                                         photoUris = relativePhotoUris,
                                         createdAt = expense.createdAt,
                                         payments = payments.map { payment ->
@@ -660,7 +663,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             val bytes = ByteArray(4)
                             val read = inputStream.read(bytes)
                             // ZIP file signature: 0x50 0x4B 0x03 0x04 (PK..)
-                            read == 4 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4B.toByte()
+                            read == 4 && bytes[0] == 0x50.toByte() && bytes[1] == 0x4B.toByte() &&
+                                    bytes[2] == 0x03.toByte() && bytes[3] == 0x04.toByte()
                         } ?: false
                     } catch (e: Exception) {
                         false
@@ -730,14 +734,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     
                     for (expense in travel.expenses) {
+                        val photoUrisValue = expense.photoUris ?: expense.photoUri
+                        val firstPhotoUri = photoUrisValue?.split(",")?.firstOrNull()
+                        
                         val newExpenseId = expenseDao.insert(
                             Expense(
                                 travelId = newTravelId,
                                 title = expense.title,
                                 totalAmount = expense.totalAmount,
                                 description = expense.description,
-                                photoUri = null,
-                                photoUris = expense.photoUris ?: expense.photoUri,
+                                photoUri = firstPhotoUri,
+                                photoUris = photoUrisValue,
                                 createdAt = expense.createdAt
                             )
                         )
@@ -884,13 +891,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             null
                         }
                         
+                        val firstPhotoUri = newPhotoUris?.split(",")?.firstOrNull()
+                        
                         val newExpenseId = expenseDao.insert(
                             Expense(
                                 travelId = newTravelId,
                                 title = expense.title,
                                 totalAmount = expense.totalAmount,
                                 description = expense.description,
-                                photoUri = null,
+                                photoUri = firstPhotoUri,
                                 photoUris = newPhotoUris,
                                 createdAt = expense.createdAt
                             )
