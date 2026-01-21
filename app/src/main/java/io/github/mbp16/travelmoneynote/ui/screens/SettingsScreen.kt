@@ -70,7 +70,7 @@ fun SettingsScreen(
     val fileNameFormatter = remember { SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()) }
     
     val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/json")
+        ActivityResultContracts.CreateDocument("application/zip")
     ) { uri ->
         uri?.let {
             viewModel.exportToFile(it) { success ->
@@ -284,7 +284,7 @@ fun SettingsScreen(
                             )
                         )
                         .clickable {
-                            val fileName = "travel_money_note_${fileNameFormatter.format(Date())}.json"
+                            val fileName = "backup_${fileNameFormatter.format(Date())}.zip"
                             exportLauncher.launch(fileName)
                         }
                 ) {
@@ -300,7 +300,7 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = "모든 데이터를 JSON 파일로 저장합니다",
+                                text = "모든 데이터와 영수증 사진을 ZIP 파일로 저장합니다",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -323,7 +323,7 @@ fun SettingsScreen(
                             )
                         )
                         .clickable {
-                            importLauncher.launch(arrayOf("application/json"))
+                            importLauncher.launch(arrayOf("application/zip", "application/json"))
                         }
                 ) {
                     Row(
@@ -338,7 +338,7 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = "JSON 파일에서 데이터를 복원합니다",
+                                text = "ZIP 또는 JSON 파일에서 데이터를 복원합니다",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
