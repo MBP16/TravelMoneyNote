@@ -69,6 +69,7 @@ fun SettingsScreen(
     var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
     var pendingExportUri by remember { mutableStateOf<android.net.Uri?>(null) }
     var pendingImportData by remember { mutableStateOf<io.github.mbp16.travelmoneynote.data.ExportData?>(null) }
+    var pendingExportTravelIds by remember { mutableStateOf<List<Long>>(emptyList()) }
     
     val context = LocalContext.current
     val dateFormatter = remember { SimpleDateFormat("yyyy.MM.dd", Locale.getDefault()) }
@@ -79,8 +80,14 @@ fun SettingsScreen(
         ActivityResultContracts.CreateDocument("application/zip")
     ) { uri ->
         uri?.let {
-            pendingExportUri = it
-            showExportSelectDialog = true
+            viewModel.exportToFile(it, pendingExportTravelIds) { success ->
+                Toast.makeText(
+                    context,
+                    if (success) "내보내기 완료" else "내보내기 실패",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            pendingExportTravelIds = emptyList()
         }
     }
     
@@ -295,7 +302,7 @@ fun SettingsScreen(
                         )
                         .clickable {
                             val fileName = "backup_${fileNameFormatter.format(Date())}.zip"
-                            exportLauncher.launch(fileName)
+                            showExportSelectDialog = true
                         }
                 ) {
                     Row(
@@ -544,20 +551,12 @@ fun SettingsScreen(
             viewModel = viewModel,
             onDismiss = {
                 showExportSelectDialog = false
-                pendingExportUri = null
             },
             onConfirm = { selectedTravelIds ->
-                pendingExportUri?.let { uri ->
-                    viewModel.exportToFile(uri, selectedTravelIds) { success ->
-                        Toast.makeText(
-                            context,
-                            if (success) "내보내기 완료" else "내보내기 실패",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
+                pendingExportTravelIds = selectedTravelIds
                 showExportSelectDialog = false
-                pendingExportUri = null
+                val fileName = "backup_${fileNameFormatter.format(Date())}.zip"
+                exportLauncher.launch(fileName)
             }
         )
     }

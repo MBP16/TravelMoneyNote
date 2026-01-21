@@ -5,8 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ExportData(
     val exportedAt: Long = System.currentTimeMillis(),
-    val travels: List<TravelExport>,
-    val standardCurrency: String
+    val travels: List<TravelExport>
 )
 
 @Serializable
