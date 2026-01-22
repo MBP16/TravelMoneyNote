@@ -14,8 +14,8 @@ android {
         applicationId = "io.github.mbp16.travelmoneynote"
         minSdk = 34
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.2.1"
+        versionCode = 7
+        versionName = "1.3.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -53,6 +53,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material.icons.extended)
+
+    implementation(libs.androidx.fragment.ktx)
     
     // Room
     implementation(libs.androidx.room.runtime)
@@ -77,6 +79,10 @@ dependencies {
     // Glance for widgets
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
+    
+    // Play App Update
+    implementation(libs.play.app.update)
+    implementation(libs.play.app.update.ktx)
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
