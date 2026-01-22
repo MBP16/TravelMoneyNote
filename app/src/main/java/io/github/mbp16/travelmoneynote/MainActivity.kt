@@ -13,7 +13,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -155,11 +154,10 @@ fun TravelMoneyNoteApp(snackbarHostState: SnackbarHostState) {
     
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { paddingValues ->
+    ) {
         NavHost(
             navController = navController,
             startDestination = "home",
-            modifier = Modifier.padding(paddingValues),
             enterTransition = {
                 slideInHorizontally(
                     initialOffsetX = { it },
