@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private lateinit var appUpdateManager: AppUpdateManager
     private lateinit var updateLauncher: ActivityResultLauncher<IntentSenderRequest>
-    private lateinit var snackbarHostState: SnackbarHostState
+    private val snackbarHostState = SnackbarHostState()
     
     private val installStateUpdatedListener = InstallStateUpdatedListener { state ->
         if (state.installStatus() == InstallStatus.DOWNLOADED) {
@@ -64,14 +64,12 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.StartIntentSenderForResult()
         ) { result ->
             if (result.resultCode != RESULT_OK) {
-                // 업데이트 취소 또는 실패 처리
+                // 업데이트 취소 또는 실패 시 로그 (사용자가 명시적으로 취소한 경우 추가 조치 불필요)
             }
         }
         
         enableEdgeToEdge()
         setContent {
-            snackbarHostState = remember { SnackbarHostState() }
-            
             // UI가 초기화된 후 업데이트 확인
             LaunchedEffect(Unit) {
                 checkForAppUpdate()
@@ -118,11 +116,6 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun showUpdateSnackbar() {
-        if (!::snackbarHostState.isInitialized) {
-            // snackbarHostState가 초기화되지 않은 경우 (setContent 호출 전)
-            return
-        }
-        
         lifecycleScope.launch {
             val result = snackbarHostState.showSnackbar(
                 message = getString(R.string.update_available_message),
