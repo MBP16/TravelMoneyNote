@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private lateinit var appUpdateManager: AppUpdateManager
     private lateinit var updateLauncher: ActivityResultLauncher<IntentSenderRequest>
-    private var snackbarHostState: SnackbarHostState? = null
+    private lateinit var snackbarHostState: SnackbarHostState
     
     private val installStateUpdatedListener = InstallStateUpdatedListener { state ->
         if (state.installStatus() == InstallStatus.DOWNLOADED) {
@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    TravelMoneyNoteApp(snackbarHostState!!)
+                    TravelMoneyNoteApp(snackbarHostState)
                 }
             }
         }
@@ -112,16 +112,19 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun showUpdateSnackbar() {
-        snackbarHostState?.let { hostState ->
-            lifecycleScope.launch {
-                val result = hostState.showSnackbar(
-                    message = getString(R.string.update_available_message),
-                    actionLabel = getString(R.string.update_restart_button),
-                    withDismissAction = true
-                )
-                if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
-                    appUpdateManager.completeUpdate()
-                }
+        if (!::snackbarHostState.isInitialized) {
+            // snackbarHostState가 초기화되지 않은 경우 (setContent 호출 전)
+            return
+        }
+        
+        lifecycleScope.launch {
+            val result = snackbarHostState.showSnackbar(
+                message = getString(R.string.update_available_message),
+                actionLabel = getString(R.string.update_restart_button),
+                withDismissAction = true
+            )
+            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                appUpdateManager.completeUpdate()
             }
         }
     }
