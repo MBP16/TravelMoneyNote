@@ -13,9 +13,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -65,11 +68,14 @@ class MainActivity : ComponentActivity() {
             }
         }
         
-        checkForAppUpdate()
-        
         enableEdgeToEdge()
         setContent {
             snackbarHostState = remember { SnackbarHostState() }
+            
+            // UI가 초기화된 후 업데이트 확인
+            LaunchedEffect(Unit) {
+                checkForAppUpdate()
+            }
             
             TravelMoneyNoteTheme {
                 Surface(
@@ -147,70 +153,75 @@ fun TravelMoneyNoteApp(snackbarHostState: SnackbarHostState) {
         permissionLauncher.launch(Manifest.permission.CAMERA)
     }
     
-    NavHost(
-        navController = navController,
-        startDestination = "home",
-        enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { it },
-                animationSpec = tween(300)
-            )
-        },
-        exitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { -it },
-                animationSpec = tween(300)
-            )
-        },
-        popEnterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { -it },
-                animationSpec = tween(300)
-            )
-        },
-        popExitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { it },
-                animationSpec = tween(300)
-            )
-        }
-    ) {
-        composable("home") {
-            HomeScreen(
-                viewModel = viewModel,
-                onNavigateToAddExpense = { navController.navigate("add_expense") },
-                onNavigateToSettings = { navController.navigate("settings") },
-                onNavigateToPersonDetail = { personId -> navController.navigate("person_detail/$personId") },
-                onNavigateToEditExpense = { expenseId -> navController.navigate("edit_expense/$expenseId") }
-            )
-        }
-        composable("add_expense") {
-            ExpenseScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable("settings") {
-            SettingsScreen(
-                viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable("person_detail/{personId}") { backStackEntry ->
-            val personId = backStackEntry.arguments?.getString("personId")?.toLongOrNull() ?: 0L
-            PersonDetailScreen(
-                viewModel = viewModel,
-                personId = personId,
-                onNavigateBack = { navController.popBackStack() }
-            )
-        }
-        composable("edit_expense/{expenseId}") { backStackEntry ->
-            val expenseId = backStackEntry.arguments?.getString("expenseId")?.toLongOrNull() ?: 0L
-            ExpenseScreen(
-                viewModel = viewModel,
-                expenseId = expenseId,
-                onNavigateBack = { navController.popBackStack() }
-            )
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = "home",
+            modifier = Modifier.padding(paddingValues),
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(300)
+                )
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { -it },
+                    animationSpec = tween(300)
+                )
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { -it },
+                    animationSpec = tween(300)
+                )
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
+            composable("home") {
+                HomeScreen(
+                    viewModel = viewModel,
+                    onNavigateToAddExpense = { navController.navigate("add_expense") },
+                    onNavigateToSettings = { navController.navigate("settings") },
+                    onNavigateToPersonDetail = { personId -> navController.navigate("person_detail/$personId") },
+                    onNavigateToEditExpense = { expenseId -> navController.navigate("edit_expense/$expenseId") }
+                )
+            }
+            composable("add_expense") {
+                ExpenseScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("settings") {
+                SettingsScreen(
+                    viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("person_detail/{personId}") { backStackEntry ->
+                val personId = backStackEntry.arguments?.getString("personId")?.toLongOrNull() ?: 0L
+                PersonDetailScreen(
+                    viewModel = viewModel,
+                    personId = personId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("edit_expense/{expenseId}") { backStackEntry ->
+                val expenseId = backStackEntry.arguments?.getString("expenseId")?.toLongOrNull() ?: 0L
+                ExpenseScreen(
+                    viewModel = viewModel,
+                    expenseId = expenseId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
     }
 }
