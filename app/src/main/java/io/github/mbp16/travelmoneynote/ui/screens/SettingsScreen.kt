@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.Language
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -35,6 +34,7 @@ import io.github.mbp16.travelmoneynote.data.Travel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import io.github.mbp16.travelmoneynote.R
 
 data class Currency(
     val code: String,
