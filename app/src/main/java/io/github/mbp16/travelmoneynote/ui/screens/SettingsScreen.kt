@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.Travel
 import kotlinx.coroutines.launch
@@ -775,8 +776,8 @@ fun LanguageSettingSection() {
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Language, // 혹은 ChevronRight
-                        contentDescription = null,
+                        painter = painterResource(id = R.drawable.ic_language),
+                        contentDescription = "언어 설정",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(4.dp))
