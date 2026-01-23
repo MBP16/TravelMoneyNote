@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.Language
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -746,10 +747,18 @@ fun LanguageSettingSection() {
         Spacer(modifier = Modifier.height(8.dp))
 
         // 드롭다운 대신 클릭 가능한 카드 사용
-        OutlinedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
+        Card(
+             shape = RoundedCornerShape(16.dp),
+             modifier = Modifier
+                 .fillMaxWidth()
+                 .dropShadow(
+                     shape = RoundedCornerShape(16.dp),
+                     shadow = Shadow(
+                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                         radius = 8.dp,
+                         offset = DpOffset(0.dp, 4.dp)
+                     ))
+                 .clickable {
                     // [핵심] 시스템의 앱 언어 설정 화면으로 이동하는 인텐트
                     val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
                         data = Uri.fromParts("package", context.packageName, null)
@@ -764,17 +773,25 @@ fun LanguageSettingSection() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "언어 변경", // strings.xml: @string/change_language
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Language, // 혹은 ChevronRight
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "언어 변경", // strings.xml: @string/change_language
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
                 
                 // 현재 언어 상태 보여주기 (예: 한국어)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = displayLanguage,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Icon(
