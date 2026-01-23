@@ -3,4 +3,7 @@
     <string name="widget_description">현재 여행의 지출 현황과 남은 현금을 확인하세요</string>
     <string name="update_available_message">업데이트가 준비되었습니다. 재시작하시겠습니까?</string>
     <string name="update_restart_button">재시작</string>
+    <string name="settings">설정</string>
+    <string name="language_setting">언어 설정</string>
+    <string name="change_language">언어 변경</string>
 </resources>

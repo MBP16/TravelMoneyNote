@@ -1,6 +1,9 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
 import android.widget.Toast
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -10,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -24,11 +28,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.Travel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import io.github.mbp16.travelmoneynote.R
 
 data class Currency(
     val code: String,
@@ -112,7 +119,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("설정") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
@@ -276,6 +283,10 @@ fun SettingsScreen(
                     }
                 }
             }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            item { LanguageSettingSection() }
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
@@ -716,6 +727,83 @@ private fun TravelDialog(
             }
         ) {
             DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LanguageSettingSection() {
+    val context = LocalContext.current
+    
+    // 현재 설정된 언어 이름 가져오기 (화면 표시용)
+    val currentLocale = context.resources.configuration.locales[0]
+    val displayLanguage = currentLocale.displayName 
+
+    Column {
+        Text(
+            text = stringResource(R.string.language_setting), // strings.xml: @string/settings_language
+            style = MaterialTheme.typography.titleMedium
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 드롭다운 대신 클릭 가능한 카드 사용
+        Card(
+             shape = RoundedCornerShape(16.dp),
+             modifier = Modifier
+                 .fillMaxWidth()
+                 .dropShadow(
+                     shape = RoundedCornerShape(16.dp),
+                     shadow = Shadow(
+                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                         radius = 8.dp,
+                         offset = DpOffset(0.dp, 4.dp)
+                     )
+                 )
+                 .clickable {
+                     // [핵심] 시스템의 앱 언어 설정 화면으로 이동하는 인텐트
+                     val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
+                         data = Uri.fromParts("package", context.packageName, null)
+                     }
+                     context.startActivity(intent)
+                 }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_language),
+                        contentDescription = "언어 설정",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.change_language), // strings.xml: @string/change_language
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                
+                // 현재 언어 상태 보여주기 (예: 한국어)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = displayLanguage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward, // 혹은 ChevronRight
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
