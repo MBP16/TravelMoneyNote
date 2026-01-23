@@ -14,7 +14,7 @@ android {
         applicationId = "io.github.mbp16.travelmoneynote"
         minSdk = 34
         targetSdk = 36
-        versionCode = 10
+        versionCode = 11
         versionName = "1.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -55,9 +55,6 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.androidx.fragment.ktx)
-    
-    // Appcompat for locale management
-    implementation(libs.androidx.appcompat)
     
     // Room
     implementation(libs.androidx.room.runtime)
