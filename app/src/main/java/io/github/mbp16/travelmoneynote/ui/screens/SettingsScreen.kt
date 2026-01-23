@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.Travel
 import kotlinx.coroutines.launch
@@ -118,7 +119,7 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("설정") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
@@ -741,7 +742,7 @@ fun LanguageSettingSection() {
 
     Column {
         Text(
-            text = "언어 설정", // strings.xml: @string/settings_language
+            text = stringResource(R.string.language_setting), // strings.xml: @string/settings_language
             style = MaterialTheme.typography.titleMedium
         )
         
@@ -758,14 +759,15 @@ fun LanguageSettingSection() {
                          color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
                          radius = 8.dp,
                          offset = DpOffset(0.dp, 4.dp)
-                     ))
+                     )
+                 )
                  .clickable {
-                    // [핵심] 시스템의 앱 언어 설정 화면으로 이동하는 인텐트
-                    val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
-                        data = Uri.fromParts("package", context.packageName, null)
-                    }
-                    context.startActivity(intent)
-                }
+                     // [핵심] 시스템의 앱 언어 설정 화면으로 이동하는 인텐트
+                     val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
+                         data = Uri.fromParts("package", context.packageName, null)
+                     }
+                     context.startActivity(intent)
+                 }
         ) {
             Row(
                 modifier = Modifier
@@ -782,7 +784,7 @@ fun LanguageSettingSection() {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "언어 변경", // strings.xml: @string/change_language
+                        text = stringResource(R.string.change_language), // strings.xml: @string/change_language
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
