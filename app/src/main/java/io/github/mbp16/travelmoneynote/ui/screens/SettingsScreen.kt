@@ -3,6 +3,7 @@ package io.github.mbp16.travelmoneynote.ui.screens
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.os.LocaleListCompat
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.data.Travel
 import kotlinx.coroutines.launch
@@ -34,6 +36,16 @@ data class Currency(
     val code: String,
     val name: String,
     val symbol: String
+)
+
+data class Language(
+    val code: String,
+    val name: String
+)
+
+val availableLanguages = listOf(
+    Language("ko", "한국어"),
+    Language("en", "English")
 )
 
 val availableCurrencies = listOf(
@@ -61,6 +73,7 @@ fun SettingsScreen(
     val standardCurrency by viewModel.standardCurrency.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
     var settingStandardCurrency by remember { mutableStateOf(false) }
+    var settingLanguage by remember { mutableStateOf(false) }
     var showAddTravelDialog by remember { mutableStateOf(false) }
     var showEditTravelDialog by remember { mutableStateOf<Travel?>(null) }
     var showDeleteTravelDialog by remember { mutableStateOf<Travel?>(null) }
@@ -270,6 +283,58 @@ fun SettingsScreen(
                                 onClick = {
                                     viewModel.setStandardCurrency(currencyOption.code)
                                     settingStandardCurrency = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            item {
+                Text(
+                    text = "언어 설정",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            item {
+                val currentLocale = AppCompatDelegate.getApplicationLocales()[0]?.language ?: "ko"
+                val selectedLanguage = availableLanguages.find { it.code == currentLocale } ?: availableLanguages[0]
+                ExposedDropdownMenuBox(
+                    expanded = settingLanguage,
+                    onExpandedChange = { settingLanguage = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedLanguage.name,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("언어") },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                            focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = settingLanguage) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = settingLanguage,
+                        onDismissRequest = { settingLanguage = false }
+                    ) {
+                        availableLanguages.forEach { languageOption ->
+                            DropdownMenuItem(
+                                text = { Text(languageOption.name) },
+                                onClick = {
+                                    val localeList = LocaleListCompat.forLanguageTags(languageOption.code)
+                                    AppCompatDelegate.setApplicationLocales(localeList)
+                                    settingLanguage = false
                                 }
                             )
                         }

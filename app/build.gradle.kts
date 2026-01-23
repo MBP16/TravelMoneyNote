@@ -56,6 +56,9 @@ dependencies {
 
     implementation(libs.androidx.fragment.ktx)
     
+    // Appcompat for locale management
+    implementation(libs.androidx.appcompat)
+    
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
