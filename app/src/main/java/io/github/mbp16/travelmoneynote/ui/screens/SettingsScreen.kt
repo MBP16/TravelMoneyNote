@@ -39,18 +39,6 @@ data class Currency(
     val symbol: String
 )
 
-data class Language(
-    val code: String,
-    val name: String
-)
-
-private const val DEFAULT_LANGUAGE_CODE = "ko"
-
-private val availableLanguages = listOf(
-    Language("ko", "한국어"),
-    Language("en", "English")
-)
-
 val availableCurrencies = listOf(
     Currency("KRW", "한국 원", "₩"),
     Currency("USD", "미국 달러", "$"),
