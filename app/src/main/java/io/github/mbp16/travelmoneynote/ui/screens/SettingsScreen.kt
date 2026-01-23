@@ -1,6 +1,9 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
 import android.widget.Toast
+import android.content.Intent
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
@@ -742,70 +745,56 @@ private fun TravelDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LanguageSettingSection() {
-    // UI 상태 관리
-    var expanded by remember { mutableStateOf(false) }
-
-    // 현재 설정된 언어 감지 로직 개선
-    // 1. LocalConfiguration을 구독하여 언어 변경 시 Recomposition 유도
-    val configuration = LocalConfiguration.current
+    val context = LocalContext.current
     
-    // 2. 실제 표시할 언어 결정
-    // 앱별 설정이 있으면 그걸 따르고, 없으면(비어있으면) 시스템(현재 Context)의 언어를 가져옴
-    val currentLocale = AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()
-    val currentLanguageCode = currentLocale.language
-
-    // 3. 현재 코드와 매칭되는 Language 객체 찾기 (못 찾으면 기본값)
-    val selectedLanguage = availableLanguages.find { it.code == currentLanguageCode }
-        ?: availableLanguages.find { it.code == "en" } // fallback
-        ?: availableLanguages.first()
+    // 현재 설정된 언어 이름 가져오기 (화면 표시용)
+    val currentLocale = context.resources.configuration.locales[0]
+    val displayLanguage = currentLocale.displayName 
 
     Column {
         Text(
-            text = "언어 설정",
+            text = "언어 설정", // strings.xml: @string/settings_language
             style = MaterialTheme.typography.titleMedium
         )
         
         Spacer(modifier = Modifier.height(8.dp))
 
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = it }
+        // 드롭다운 대신 클릭 가능한 카드 사용
+        OutlinedCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    // [핵심] 시스템의 앱 언어 설정 화면으로 이동하는 인텐트
+                    val intent = Intent(Settings.ACTION_APP_LOCALE_SETTINGS).apply {
+                        data = Uri.fromParts("package", context.packageName, null)
+                    }
+                    context.startActivity(intent)
+                }
         ) {
-            OutlinedTextField(
-                value = selectedLanguage.name,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("언어") },
-                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                    focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface
-                ),
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor()
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                availableLanguages.forEach { languageOption ->
-                    DropdownMenuItem(
-                        text = { Text(languageOption.name) },
-                        onClick = {
-                            // 언어 변경 실행
-                            val localeList = LocaleListCompat.forLanguageTags(languageOption.code)
-                            AppCompatDelegate.setApplicationLocales(localeList)
-                            expanded = false
-                        },
-                        // 현재 선택된 항목 표시
-                        trailingIcon = if (languageOption.code == selectedLanguage.code) {
-                            { Icon(Icons.Default.Check, contentDescription = null) }
-                        } else null
+                Text(
+                    text = "언어 변경", // strings.xml: @string/change_language
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                
+                // 현재 언어 상태 보여주기 (예: 한국어)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = displayLanguage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward, // 혹은 ChevronRight
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
