@@ -64,20 +64,6 @@ val availableCurrencies = listOf(
     Currency("AUD", "호주 달러", "A$"),
 )
 
-private fun getCurrentLanguageCode(): String {
-    val locales = AppCompatDelegate.getApplicationLocales()
-    return if (!locales.isEmpty) {
-        locales[0]?.language ?: DEFAULT_LANGUAGE_CODE
-    } else {
-        DEFAULT_LANGUAGE_CODE
-    }
-}
-
-private fun getSelectedLanguage(): Language {
-    val currentCode = getCurrentLanguageCode()
-    return availableLanguages.find { it.code == currentCode } ?: availableLanguages[0]
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -89,7 +75,6 @@ fun SettingsScreen(
     val standardCurrency by viewModel.standardCurrency.collectAsState()
     var showResetDialog by remember { mutableStateOf(false) }
     var settingStandardCurrency by remember { mutableStateOf(false) }
-    var settingLanguage by remember { mutableStateOf(false) }
     var showAddTravelDialog by remember { mutableStateOf(false) }
     var showEditTravelDialog by remember { mutableStateOf<Travel?>(null) }
     var showDeleteTravelDialog by remember { mutableStateOf<Travel?>(null) }
@@ -308,54 +293,7 @@ fun SettingsScreen(
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            item {
-                Text(
-                    text = "언어 설정",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-
-            item {
-                val selectedLanguage = getSelectedLanguage()
-                ExposedDropdownMenuBox(
-                    expanded = settingLanguage,
-                    onExpandedChange = { settingLanguage = it }
-                ) {
-                    OutlinedTextField(
-                        value = selectedLanguage.name,
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("언어") },
-                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
-                            focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = settingLanguage) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = settingLanguage,
-                        onDismissRequest = { settingLanguage = false }
-                    ) {
-                        availableLanguages.forEach { languageOption ->
-                            DropdownMenuItem(
-                                text = { Text(languageOption.name) },
-                                onClick = {
-                                    val localeList = LocaleListCompat.forLanguageTags(languageOption.code)
-                                    AppCompatDelegate.setApplicationLocales(localeList)
-                                    settingLanguage = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
+            item { LanguageSettingSection() }
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
@@ -796,6 +734,80 @@ private fun TravelDialog(
             }
         ) {
             DatePicker(state = datePickerState)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LanguageSettingSection() {
+    // UI 상태 관리
+    var expanded by remember { mutableStateOf(false) }
+
+    // 현재 설정된 언어 감지 로직 개선
+    // 1. LocalConfiguration을 구독하여 언어 변경 시 Recomposition 유도
+    val configuration = LocalConfiguration.current
+    
+    // 2. 실제 표시할 언어 결정
+    // 앱별 설정이 있으면 그걸 따르고, 없으면(비어있으면) 시스템(현재 Context)의 언어를 가져옴
+    val currentLocale = AppCompatDelegate.getApplicationLocales()[0] ?: Locale.getDefault()
+    val currentLanguageCode = currentLocale.language
+
+    // 3. 현재 코드와 매칭되는 Language 객체 찾기 (못 찾으면 기본값)
+    val selectedLanguage = availableLanguages.find { it.code == currentLanguageCode }
+        ?: availableLanguages.find { it.code == "en" } // fallback
+        ?: availableLanguages.first()
+
+    Column {
+        Text(
+            text = "언어 설정",
+            style = MaterialTheme.typography.titleMedium
+        )
+        
+        Spacer(modifier = Modifier.height(8.dp))
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it }
+        ) {
+            OutlinedTextField(
+                value = selectedLanguage.name,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("언어") },
+                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface
+                ),
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                availableLanguages.forEach { languageOption ->
+                    DropdownMenuItem(
+                        text = { Text(languageOption.name) },
+                        onClick = {
+                            // 언어 변경 실행
+                            val localeList = LocaleListCompat.forLanguageTags(languageOption.code)
+                            AppCompatDelegate.setApplicationLocales(localeList)
+                            expanded = false
+                        },
+                        // 현재 선택된 항목 표시
+                        trailingIcon = if (languageOption.code == selectedLanguage.code) {
+                            { Icon(Icons.Default.Check, contentDescription = null) }
+                        } else null
+                    )
+                }
+            }
         }
     }
 }
