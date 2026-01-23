@@ -43,12 +43,12 @@ data class Language(
     val name: String
 )
 
-val availableLanguages = listOf(
+private val availableLanguages = listOf(
     Language("ko", "한국어"),
     Language("en", "English")
 )
 
-val availableCurrencies = listOf(
+private val availableCurrencies = listOf(
     Currency("KRW", "한국 원", "₩"),
     Currency("USD", "미국 달러", "$"),
     Currency("EUR", "유로", "€"),
@@ -300,7 +300,7 @@ fun SettingsScreen(
             }
 
             item {
-                val currentLocale = AppCompatDelegate.getApplicationLocales()[0]?.language ?: "ko"
+                val currentLocale = AppCompatDelegate.getApplicationLocales().takeIf { !it.isEmpty }?.get(0)?.language ?: "ko"
                 val selectedLanguage = availableLanguages.find { it.code == currentLocale } ?: availableLanguages[0]
                 ExposedDropdownMenuBox(
                     expanded = settingLanguage,
