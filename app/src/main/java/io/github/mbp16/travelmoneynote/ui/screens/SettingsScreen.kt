@@ -43,6 +43,8 @@ data class Language(
     val name: String
 )
 
+private const val DEFAULT_LANGUAGE_CODE = "ko"
+
 private val availableLanguages = listOf(
     Language("ko", "한국어"),
     Language("en", "English")
@@ -61,6 +63,20 @@ private val availableCurrencies = listOf(
     Currency("SGD", "싱가포르 달러", "S$"),
     Currency("AUD", "호주 달러", "A$"),
 )
+
+private fun getCurrentLanguageCode(): String {
+    val locales = AppCompatDelegate.getApplicationLocales()
+    return if (!locales.isEmpty) {
+        locales[0]?.language ?: DEFAULT_LANGUAGE_CODE
+    } else {
+        DEFAULT_LANGUAGE_CODE
+    }
+}
+
+private fun getSelectedLanguage(): Language {
+    val currentCode = getCurrentLanguageCode()
+    return availableLanguages.find { it.code == currentCode } ?: availableLanguages[0]
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -300,8 +316,7 @@ fun SettingsScreen(
             }
 
             item {
-                val currentLocale = AppCompatDelegate.getApplicationLocales().takeIf { !it.isEmpty }?.get(0)?.language ?: "ko"
-                val selectedLanguage = availableLanguages.find { it.code == currentLocale } ?: availableLanguages[0]
+                val selectedLanguage = getSelectedLanguage()
                 ExposedDropdownMenuBox(
                     expanded = settingLanguage,
                     onExpandedChange = { settingLanguage = it }
