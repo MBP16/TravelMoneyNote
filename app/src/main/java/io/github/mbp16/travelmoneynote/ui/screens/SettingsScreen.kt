@@ -50,7 +50,7 @@ private val availableLanguages = listOf(
     Language("en", "English")
 )
 
-private val availableCurrencies = listOf(
+val availableCurrencies = listOf(
     Currency("KRW", "한국 원", "₩"),
     Currency("USD", "미국 달러", "$"),
     Currency("EUR", "유로", "€"),
