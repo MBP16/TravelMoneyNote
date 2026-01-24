@@ -800,17 +800,22 @@ fun ExpenseUserEntryCard(
     
     // DatePicker Dialog
     if (showDatePicker) {
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = createdAt
+        val calendar = remember(createdAt) {
+            Calendar.getInstance().apply {
+                timeInMillis = createdAt
+            }
         }
         // Get date at midnight for DatePicker initialization
-        val dateAtMidnight = Calendar.getInstance().apply {
-            timeInMillis = createdAt
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
+        val dateAtMidnight = remember(createdAt) {
+            calendar.clone().let { cal ->
+                (cal as Calendar).apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+            }
+        }
         
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = dateAtMidnight
@@ -827,6 +832,8 @@ fun ExpenseUserEntryCard(
                         calendar.timeInMillis = selectedDate
                         calendar.set(Calendar.HOUR_OF_DAY, hour)
                         calendar.set(Calendar.MINUTE, minute)
+                        calendar.set(Calendar.SECOND, 0)
+                        calendar.set(Calendar.MILLISECOND, 0)
                         createdAt = calendar.timeInMillis
                     }
                     showDatePicker = false
@@ -847,8 +854,10 @@ fun ExpenseUserEntryCard(
     
     // TimePicker Dialog
     if (showTimePicker) {
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = createdAt
+        val calendar = remember(createdAt) {
+            Calendar.getInstance().apply {
+                timeInMillis = createdAt
+            }
         }
         val timePickerState = rememberTimePickerState(
             initialHour = calendar.get(Calendar.HOUR_OF_DAY),
@@ -860,7 +869,7 @@ fun ExpenseUserEntryCard(
             onDismissRequest = { showTimePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    // Reuse the same calendar instance
+                    // Update time while preserving date, and reset seconds/milliseconds
                     calendar.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
                     calendar.set(Calendar.MINUTE, timePickerState.minute)
                     calendar.set(Calendar.SECOND, 0)
