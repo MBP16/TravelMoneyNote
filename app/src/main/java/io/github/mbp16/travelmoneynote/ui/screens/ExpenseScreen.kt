@@ -18,12 +18,6 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -273,7 +267,7 @@ fun ExpenseScreen(
             
             // Date and Time picker field
             item {
-                val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault())
+                val dateFormat = remember { SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()) }
                 val formattedDateTime = dateFormat.format(Date(createdAt))
                 
                 OutlinedCard(
