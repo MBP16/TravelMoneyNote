@@ -803,31 +803,31 @@ fun ExpenseUserEntryCard(
         val calendar = Calendar.getInstance().apply {
             timeInMillis = createdAt
         }
+        // Get date at midnight for DatePicker initialization
+        val dateAtMidnight = Calendar.getInstance().apply {
+            timeInMillis = createdAt
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = calendar.apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
+            initialSelectedDateMillis = dateAtMidnight
         )
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { selectedDate ->
-                        val calendar = Calendar.getInstance().apply {
-                            timeInMillis = createdAt
-                        }
+                        // Preserve current time when changing date
                         val hour = calendar.get(Calendar.HOUR_OF_DAY)
                         val minute = calendar.get(Calendar.MINUTE)
                         
-                        val newCalendar = Calendar.getInstance().apply {
-                            timeInMillis = selectedDate
-                            set(Calendar.HOUR_OF_DAY, hour)
-                            set(Calendar.MINUTE, minute)
-                        }
-                        createdAt = newCalendar.timeInMillis
+                        calendar.timeInMillis = selectedDate
+                        calendar.set(Calendar.HOUR_OF_DAY, hour)
+                        calendar.set(Calendar.MINUTE, minute)
+                        createdAt = calendar.timeInMillis
                     }
                     showDatePicker = false
                     showTimePicker = true
@@ -860,9 +860,7 @@ fun ExpenseUserEntryCard(
             onDismissRequest = { showTimePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    val calendar = Calendar.getInstance().apply {
-                        timeInMillis = createdAt
-                    }
+                    // Reuse the same calendar instance
                     calendar.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
                     calendar.set(Calendar.MINUTE, timePickerState.minute)
                     calendar.set(Calendar.SECOND, 0)
