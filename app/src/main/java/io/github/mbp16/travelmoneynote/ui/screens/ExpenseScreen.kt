@@ -14,9 +14,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -78,12 +85,18 @@ fun ExpenseScreen(
     var payments by remember { mutableStateOf(listOf(PaymentEntry(null, "", PaymentMethod.CASH))) }
     var expenseUsers by remember { mutableStateOf(listOf(ExpenseUserEntry(null, "", ""))) }
     var isInitialized by remember { mutableStateOf(false) }
+    
+    // Date/Time picker state
+    var createdAt by remember { mutableStateOf(System.currentTimeMillis()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     // Initialize state if editing
     LaunchedEffect(expenseWithPayments, persons) {
         if (!isInitialized && expenseId != null && expenseWithPayments != null && persons.isNotEmpty()) {
             title = expenseWithPayments.expense.title
             description = expenseWithPayments.expense.description
+            createdAt = expenseWithPayments.expense.createdAt
             // Load photos from photoUris field
             val urisString = expenseWithPayments.expense.photoUris
             photoUris = if (!urisString.isNullOrEmpty()) {
@@ -195,7 +208,8 @@ fun ExpenseScreen(
                             val amount = eu.amount.toDoubleOrNull() ?: return@mapNotNull null
                             Triple(person.id, amount, eu.description)
                         }
-                    }
+                    },
+                    createdAt = createdAt
                 )
             } else {
                 viewModel.updateExpenseWithPayments(
@@ -215,7 +229,8 @@ fun ExpenseScreen(
                             val amount = eu.amount.toDoubleOrNull() ?: return@mapNotNull null
                             Triple(person.id, amount, eu.description)
                         }
-                    }
+                    },
+                    createdAt = createdAt
                 )
             }
             onNavigateBack()
@@ -254,6 +269,42 @@ fun ExpenseScreen(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
+            }
+            
+            // Date and Time picker field
+            item {
+                val dateFormat = SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault())
+                val formattedDateTime = dateFormat.format(Date(createdAt))
+                
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { showDatePicker = true }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "생성 일시",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = formattedDateTime,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "날짜 선택",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             }
             
             item {
@@ -751,5 +802,91 @@ fun ExpenseUserEntryCard(
                 singleLine = true
             )
         }
+    }
+    
+    // DatePicker Dialog
+    if (showDatePicker) {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = createdAt
+        }
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = calendar.apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { selectedDate ->
+                        val calendar = Calendar.getInstance().apply {
+                            timeInMillis = createdAt
+                        }
+                        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                        val minute = calendar.get(Calendar.MINUTE)
+                        
+                        val newCalendar = Calendar.getInstance().apply {
+                            timeInMillis = selectedDate
+                            set(Calendar.HOUR_OF_DAY, hour)
+                            set(Calendar.MINUTE, minute)
+                        }
+                        createdAt = newCalendar.timeInMillis
+                    }
+                    showDatePicker = false
+                    showTimePicker = true
+                }) {
+                    Text("다음")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("취소")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+    
+    // TimePicker Dialog
+    if (showTimePicker) {
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = createdAt
+        }
+        val timePickerState = rememberTimePickerState(
+            initialHour = calendar.get(Calendar.HOUR_OF_DAY),
+            initialMinute = calendar.get(Calendar.MINUTE),
+            is24Hour = true
+        )
+        
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    val calendar = Calendar.getInstance().apply {
+                        timeInMillis = createdAt
+                    }
+                    calendar.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                    calendar.set(Calendar.MINUTE, timePickerState.minute)
+                    calendar.set(Calendar.SECOND, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
+                    createdAt = calendar.timeInMillis
+                    showTimePicker = false
+                }) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("취소")
+                }
+            },
+            text = {
+                TimePicker(state = timePickerState)
+            }
+        )
     }
 }

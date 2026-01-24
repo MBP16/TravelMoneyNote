@@ -212,7 +212,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         description: String,
         photoUri: String?,
         payments: List<Triple<Long, Double, PaymentMethod>>,
-        expenseUsers: List<Triple<Long, Double, String>> = emptyList()
+        expenseUsers: List<Triple<Long, Double, String>> = emptyList(),
+        createdAt: Long = System.currentTimeMillis()
     ) {
         val travelId = _selectedTravelId.value
         if (travelId <= 0) return
@@ -223,7 +224,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     title = title,
                     totalAmount = totalAmount,
                     description = description,
-                    photoUris = photoUri
+                    photoUris = photoUri,
+                    createdAt = createdAt
                 )
             )
             val paymentEntities = payments.map { (personId, amount, method) ->
@@ -254,14 +256,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         description: String,
         photoUri: String?,
         payments: List<Triple<Long, Double, PaymentMethod>>,
-        expenseUsers: List<Triple<Long, Double, String>> = emptyList()
+        expenseUsers: List<Triple<Long, Double, String>> = emptyList(),
+        createdAt: Long? = null
     ) {
         val travelId = _selectedTravelId.value
         if (travelId <= 0) return
         viewModelScope.launch {
-            // Get the original expense to preserve createdAt
-            val originalExpense = expenseDao.getExpenseById(expenseId)
-            val createdAt = originalExpense?.createdAt ?: System.currentTimeMillis()
+            // Use provided createdAt or preserve original
+            val finalCreatedAt = createdAt ?: run {
+                val originalExpense = expenseDao.getExpenseById(expenseId)
+                originalExpense?.createdAt ?: System.currentTimeMillis()
+            }
             
             expenseDao.update(
                 Expense(
@@ -271,7 +276,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     totalAmount = totalAmount,
                     description = description,
                     photoUris = photoUri,
-                    createdAt = createdAt
+                    createdAt = finalCreatedAt
                 )
             )
             paymentDao.deletePaymentsForExpense(expenseId)
