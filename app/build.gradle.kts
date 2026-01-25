@@ -14,7 +14,7 @@ android {
         applicationId = "io.github.mbp16.travelmoneynote"
         minSdk = 34
         targetSdk = 36
-        versionCode = 16
+        versionCode = 17
         versionName = "1.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
