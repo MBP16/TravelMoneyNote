@@ -545,6 +545,7 @@ fun ExpenseScreen(
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     modifier = Modifier
+                        .clickable { showDatePicker = true }
                         .fillMaxWidth()
                         .dropShadow(
                             shape = RoundedCornerShape(16.dp),
