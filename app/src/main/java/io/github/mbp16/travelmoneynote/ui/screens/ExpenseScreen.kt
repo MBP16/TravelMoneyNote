@@ -78,12 +78,18 @@ fun ExpenseScreen(
     var payments by remember { mutableStateOf(listOf(PaymentEntry(null, "", PaymentMethod.CASH))) }
     var expenseUsers by remember { mutableStateOf(listOf(ExpenseUserEntry(null, "", ""))) }
     var isInitialized by remember { mutableStateOf(false) }
+    
+    // Date/Time picker state
+    var createdAt by remember { mutableStateOf(System.currentTimeMillis()) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
 
     // Initialize state if editing
     LaunchedEffect(expenseWithPayments, persons) {
         if (!isInitialized && expenseId != null && expenseWithPayments != null && persons.isNotEmpty()) {
             title = expenseWithPayments.expense.title
             description = expenseWithPayments.expense.description
+            createdAt = expenseWithPayments.expense.createdAt
             // Load photos from photoUris field
             val urisString = expenseWithPayments.expense.photoUris
             photoUris = if (!urisString.isNullOrEmpty()) {
@@ -195,7 +201,8 @@ fun ExpenseScreen(
                             val amount = eu.amount.toDoubleOrNull() ?: return@mapNotNull null
                             Triple(person.id, amount, eu.description)
                         }
-                    }
+                    },
+                    createdAt = createdAt
                 )
             } else {
                 viewModel.updateExpenseWithPayments(
@@ -215,7 +222,8 @@ fun ExpenseScreen(
                             val amount = eu.amount.toDoubleOrNull() ?: return@mapNotNull null
                             Triple(person.id, amount, eu.description)
                         }
-                    }
+                    },
+                    createdAt = createdAt
                 )
             }
             onNavigateBack()
@@ -515,12 +523,153 @@ fun ExpenseScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("설명 (선택)") },
+                    label = { Text("메모 (선택)") },
                     modifier = Modifier.fillMaxWidth().height(300.dp),
                     singleLine = false
                 )
             }
+
+            // Date and Time picker field
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "사용 일시",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            
+            item {
+                val dateFormat = remember { SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()) }
+                val formattedDateTime = dateFormat.format(Date(createdAt))
+                
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .clickable { showDatePicker = true }
+                        .fillMaxWidth()
+                        .dropShadow(
+                            shape = RoundedCornerShape(16.dp),
+                            shadow = Shadow(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                radius = 16.dp,
+                                spread = 0.dp,
+                                offset = DpOffset(0.dp, 8.dp)
+                            )
+                        )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "사용 일시",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = formattedDateTime,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                }
+            }
         }
+    }
+
+    // DatePicker Dialog
+    if (showDatePicker) {
+        val calendar = remember(createdAt) {
+            Calendar.getInstance().apply {
+                timeInMillis = createdAt
+            }
+        }
+        // Get date at midnight for DatePicker initialization
+        val dateAtMidnight = remember(createdAt) {
+            calendar.clone().let { cal ->
+                (cal as Calendar).apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+            }
+        }
+        
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = dateAtMidnight
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { selectedDate ->
+                        // Preserve current time when changing date
+                        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+                        val minute = calendar.get(Calendar.MINUTE)
+                        
+                        calendar.timeInMillis = selectedDate
+                        calendar.set(Calendar.HOUR_OF_DAY, hour)
+                        calendar.set(Calendar.MINUTE, minute)
+                        calendar.set(Calendar.SECOND, 0)
+                        calendar.set(Calendar.MILLISECOND, 0)
+                        createdAt = calendar.timeInMillis
+                    }
+                    showDatePicker = false
+                    showTimePicker = true
+                }) {
+                    Text("다음")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("취소")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+    
+    // TimePicker Dialog
+    if (showTimePicker) {
+        val calendar = remember(createdAt) {
+            Calendar.getInstance().apply {
+                timeInMillis = createdAt
+            }
+        }
+        val timePickerState = rememberTimePickerState(
+            initialHour = calendar.get(Calendar.HOUR_OF_DAY),
+            initialMinute = calendar.get(Calendar.MINUTE),
+            is24Hour = true
+        )
+        
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Update time while preserving date, and reset seconds/milliseconds
+                    calendar.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                    calendar.set(Calendar.MINUTE, timePickerState.minute)
+                    calendar.set(Calendar.SECOND, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
+                    createdAt = calendar.timeInMillis
+                    showTimePicker = false
+                }) {
+                    Text("확인")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTimePicker = false }) {
+                    Text("취소")
+                }
+            },
+            text = {
+                TimePicker(state = timePickerState)
+            }
+        )
     }
     
     // Show image viewer dialog when an image is selected
@@ -746,7 +895,7 @@ fun ExpenseUserEntryCard(
             OutlinedTextField(
                 value = expenseUser.description,
                 onValueChange = { onExpenseUserChange(expenseUser.copy(description = it)) },
-                label = { Text("설명 (선택)") },
+                label = { Text("메모 (선택)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
