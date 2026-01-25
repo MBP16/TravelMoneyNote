@@ -14,7 +14,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
@@ -532,12 +531,30 @@ fun ExpenseScreen(
 
             // Date and Time picker field
             item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "사용 일시",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+            
+            item {
                 val dateFormat = remember { SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()) }
                 val formattedDateTime = dateFormat.format(Date(createdAt))
                 
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { showDatePicker = true }
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .dropShadow(
+                            shape = RoundedCornerShape(16.dp),
+                            shadow = Shadow(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                radius = 16.dp,
+                                spread = 0.dp,
+                                offset = DpOffset(0.dp, 8.dp)
+                            )
+                        )
                 ) {
                     Row(
                         modifier = Modifier
@@ -546,21 +563,14 @@ fun ExpenseScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                text = "생성 일시",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = formattedDateTime,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "날짜 선택",
-                            tint = MaterialTheme.colorScheme.primary
+                        Text(
+                            text = "사용 일시",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = formattedDateTime,
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
