@@ -265,42 +265,6 @@ fun ExpenseScreen(
                 )
             }
             
-            // Date and Time picker field
-            item {
-                val dateFormat = remember { SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()) }
-                val formattedDateTime = dateFormat.format(Date(createdAt))
-                
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = { showDatePicker = true }
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "생성 일시",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = formattedDateTime,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "날짜 선택",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-            
             item {
                 Card(
                     shape = RoundedCornerShape(16.dp),
@@ -560,10 +524,46 @@ fun ExpenseScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("설명 (선택)") },
+                    label = { Text("메모 (선택)") },
                     modifier = Modifier.fillMaxWidth().height(300.dp),
                     singleLine = false
                 )
+            }
+
+            // Date and Time picker field
+            item {
+                val dateFormat = remember { SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()) }
+                val formattedDateTime = dateFormat.format(Date(createdAt))
+                
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { showDatePicker = true }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "생성 일시",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = formattedDateTime,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "날짜 선택",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             }
         }
     }
@@ -884,7 +884,7 @@ fun ExpenseUserEntryCard(
             OutlinedTextField(
                 value = expenseUser.description,
                 onValueChange = { onExpenseUserChange(expenseUser.copy(description = it)) },
-                label = { Text("설명 (선택)") },
+                label = { Text("메모 (선택)") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
