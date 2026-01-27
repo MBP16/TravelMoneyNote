@@ -35,6 +35,8 @@ import io.github.mbp16.travelmoneynote.data.Person
 import io.github.mbp16.travelmoneynote.ui.components.ImageViewerDialog
 import java.io.File
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
 import java.util.*
 
 data class PaymentEntry(
@@ -588,14 +590,12 @@ fun ExpenseScreen(
         }
         // Get date at midnight for DatePicker initialization
         val dateAtMidnight = remember(createdAt) {
-            calendar.clone().let { cal ->
-                (cal as Calendar).apply {
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }.timeInMillis
-            }
+            Instant.ofEpochMilli(createdAt)
+                .atZone(ZoneId.of("UTC"))
+                .toLocalDate()
+                .atStartOfDay(ZoneId.of("UTC"))
+                .toInstant()
+                .toEpochMilli()
         }
         
         val datePickerState = rememberDatePickerState(
