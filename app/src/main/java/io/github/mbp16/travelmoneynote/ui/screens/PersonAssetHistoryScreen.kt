@@ -248,7 +248,7 @@ fun PersonAssetHistoryScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             }
-                        Column(horizontalAlignment = Alignment.End) {
+                        Column {
                             Text(
                                 text = "누적 출금",
                                 style = MaterialTheme.typography.bodySmall,
