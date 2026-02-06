@@ -1,5 +1,6 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.text.input.KeyboardType
@@ -283,6 +285,7 @@ fun PersonDetailScreen(
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -361,6 +364,7 @@ fun PersonDetailScreen(
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
                             ) {
