@@ -35,38 +35,38 @@ fun PersonUsageHistoryScreen(
     personId: Long,
     onNavigateBack: () -> Unit
 ) {
-    val 사람목록흐름 = viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
-    val 현재사람정보 = 사람목록흐름.value.find { it.person.id == personId }
-    val 소비기록들 = viewModel.getUsageHistoryForPerson(personId).collectAsState(initial = emptyList())
-    val 여행통화 by viewModel.currentCurrency.collectAsState()
-    val 표준통화 by viewModel.standardCurrency.collectAsState()
-    val 환율데이터 by viewModel.exchangeRates.collectAsState()
+    val personListFlow = viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
+    val currentPerson = personListFlow.value.find { it.person.id == personId }
+    val expenseHistory = viewModel.getUsageHistoryForPerson(personId).collectAsState(initial = emptyList())
+    val travelCurrency by viewModel.currentCurrency.collectAsState()
+    val standardCurrency by viewModel.standardCurrency.collectAsState()
+    val exchangeRateData by viewModel.exchangeRates.collectAsState()
     
-    val 통화표시문자 = availableCurrencies.find { it.code == 여행통화 }?.symbol ?: "₩"
-    val 표준통화표시 = availableCurrencies.find { it.code == 표준통화 }?.symbol ?: "₩"
-    val 환율표시활성화 = 여행통화 != 표준통화 && 환율데이터 != null
-    val 날짜표시형식 = remember { SimpleDateFormat("yy.MM.dd HH:mm", Locale.getDefault()) }
+    val currencyDisplay = availableCurrencies.find { it.code == travelCurrency }?.symbol ?: "₩"
+    val standardCurrencyDisplay = availableCurrencies.find { it.code == standardCurrency }?.symbol ?: "₩"
+    val isExchangeRateDisplayEnabled = travelCurrency != standardCurrency && exchangeRateData != null
+    val dateDisplayStyle = remember { SimpleDateFormat("yy.MM.dd HH:mm", Locale.getDefault()) }
 
-    fun 금액을문자열로(금액값: Double): String {
-        val 정리된금액 = if (금액값 % 1.0 == 0.0) {
-            금액값.toInt().toString()
+    fun formatMoney(money: Double): String {
+        val refinedMoney = if (money % 1.0 == 0.0) {
+            money.toInt().toString()
         } else {
-            String.format("%.2f", 금액값).trimEnd('0').trimEnd('.')
+            String.format("%.2f", money).trimEnd('0').trimEnd('.')
         }
-        val 기본문자열 = "$정리된금액$통화표시문자"
-        if (!환율표시활성화) return 기본문자열
-        val 변환금액 = viewModel.convertToStandardCurrency(금액값, 여행통화)
-        return if (변환금액 != null) {
-            "$기본문자열 (${String.format("%,.0f", 변환금액)}$표준통화표시)"
-        } else 기본문자열
+        val defaultText = "$refinedMoney$currencyDisplay"
+        if (!isExchangeRateDisplayEnabled) return defaultText
+        val exchangedMoney = viewModel.convertToStandardCurrency(money, travelCurrency)
+        return if (exchangedMoney != null) {
+            "$defaultText (${String.format("%,.0f", exchangedMoney)}$standardCurrencyDisplay)"
+        } else defaultText
     }
 
-    val 총사용금액 = 소비기록들.value.sumOf { it.amount }
+    val totalMoney = expenseHistory.value.sumOf { it.amount }
     
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("${현재사람정보?.person?.name ?: "알수없음"}의 소비 내역") },
+                title = { Text("${currentPerson?.person?.name ?: "알수없음"}의 소비 내역") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
@@ -74,11 +74,11 @@ fun PersonUsageHistoryScreen(
                 }
             )
         }
-    ) { 패딩설정 ->
+    ) { paddingSettings ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(패딩설정)
+                .padding(paddingSettings)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
@@ -128,7 +128,7 @@ fun PersonUsageHistoryScreen(
                                 )
                             }
                             Text(
-                                text = "${소비기록들.value.size}건의 사용 기록",
+                                text = "${expenseHistory.value.size}건의 사용 기록",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                             )
@@ -140,7 +140,7 @@ fun PersonUsageHistoryScreen(
                                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = 금액을문자열로(총사용금액),
+                                text = formatMoney(totalMoney),
                                 style = MaterialTheme.typography.headlineMedium,
                                 color = MaterialTheme.colorScheme.tertiary
                             )
@@ -149,7 +149,7 @@ fun PersonUsageHistoryScreen(
                 }
             }
 
-            if (소비기록들.value.isEmpty()) {
+            if (expenseHistory.value.isEmpty()) {
                 item {
                     Card(
                         shape = RoundedCornerShape(16.dp),
@@ -191,7 +191,7 @@ fun PersonUsageHistoryScreen(
                     }
                 }
             } else {
-                items(소비기록들.value) { 소비항목 ->
+                items(expenseHistory.value) { expenseItem ->
                     Card(
                         shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(
@@ -225,21 +225,21 @@ fun PersonUsageHistoryScreen(
                                     verticalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
                                     Text(
-                                        text = 소비항목.title,
+                                        text = expenseItem.title,
                                         style = MaterialTheme.typography.titleLarge,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    if (소비항목.description.isNotEmpty()) {
+                                    if (expenseItem.description.isNotEmpty()) {
                                         Text(
-                                            text = 소비항목.description,
+                                            text = expenseItem.description,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 2,
                                             overflow = TextOverflow.Ellipsis
                                         )
                                     }
-                                </Column>
+                                }
                                 
                                 Spacer(modifier = Modifier.width(12.dp))
                                 
@@ -249,7 +249,7 @@ fun PersonUsageHistoryScreen(
                                     modifier = Modifier.padding(top = 4.dp)
                                 ) {
                                     Text(
-                                        text = 금액을문자열로(소비항목.amount),
+                                        text = formatMoney(expenseItem.amount),
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -277,7 +277,7 @@ fun PersonUsageHistoryScreen(
                                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        소비항목.payerNames.take(3).forEach { 결제자명 ->
+                                        expenseItem.payerNames.take(3).forEach { payerName ->
                                             Surface(
                                                 shape = RoundedCornerShape(8.dp),
                                                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
@@ -288,25 +288,25 @@ fun PersonUsageHistoryScreen(
                                                 )
                                             ) {
                                                 Text(
-                                                    text = 결제자명,
+                                                    text = payerName,
                                                     style = MaterialTheme.typography.labelMedium,
                                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                                 )
                                             }
                                         }
-                                        if (소비항목.payerNames.size > 3) {
+                                        if (expenseItem.payerNames.size > 3) {
                                             Text(
-                                                text = "+${소비항목.payerNames.size - 3}",
+                                                text = "+${expenseItem.payerNames.size - 3}",
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
-                                </Column>
+                                }
                                 
                                 Text(
-                                    text = 날짜표시형식.format(Date(소비항목.createdAt)),
+                                    text = dateDisplayStyle.format(Date(expenseItem.createdAt)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                                 )
