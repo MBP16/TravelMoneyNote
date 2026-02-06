@@ -38,8 +38,8 @@ fun PersonDetailScreen(
     viewModel: MainViewModel,
     personId: Long,
     onNavigateBack: () -> Unit,
-    onNavigateToAssetHistory: (Long) -> Unit = {},
-    onNavigateToUsageHistory: (Long) -> Unit = {}
+    onNavigateToAssetHistory: (Long) -> Unit,
+    onNavigateToUsageHistory: (Long) -> Unit
 ) {
     val personsWithBalance by viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
     val personWithBalance = personsWithBalance.find { it.person.id == personId }

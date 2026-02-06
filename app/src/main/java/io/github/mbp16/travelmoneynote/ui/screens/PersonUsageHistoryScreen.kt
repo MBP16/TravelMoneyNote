@@ -31,16 +31,16 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonUsageHistoryScreen(
-    데이터관리자: MainViewModel,
-    선택된사람ID: Long,
-    화면닫기함수: () -> Unit
+    viewModel: MainViewModel,
+    personId: Long,
+    onNavigateBack: () -> Unit
 ) {
-    val 사람목록흐름 = 데이터관리자.getPersonsWithBalance().collectAsState(initial = emptyList())
-    val 현재사람정보 = 사람목록흐름.value.find { it.person.id == 선택된사람ID }
-    val 소비기록들 = 데이터관리자.getUsageHistoryForPerson(선택된사람ID).collectAsState(initial = emptyList())
-    val 여행통화 by 데이터관리자.currentCurrency.collectAsState()
-    val 표준통화 by 데이터관리자.standardCurrency.collectAsState()
-    val 환율데이터 by 데이터관리자.exchangeRates.collectAsState()
+    val 사람목록흐름 = viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
+    val 현재사람정보 = 사람목록흐름.value.find { it.person.id == personId }
+    val 소비기록들 = viewModel.getUsageHistoryForPerson(personId).collectAsState(initial = emptyList())
+    val 여행통화 by viewModel.currentCurrency.collectAsState()
+    val 표준통화 by viewModel.standardCurrency.collectAsState()
+    val 환율데이터 by viewModel.exchangeRates.collectAsState()
     
     val 통화표시문자 = availableCurrencies.find { it.code == 여행통화 }?.symbol ?: "₩"
     val 표준통화표시 = availableCurrencies.find { it.code == 표준통화 }?.symbol ?: "₩"
@@ -55,7 +55,7 @@ fun PersonUsageHistoryScreen(
         }
         val 기본문자열 = "$정리된금액$통화표시문자"
         if (!환율표시활성화) return 기본문자열
-        val 변환금액 = 데이터관리자.convertToStandardCurrency(금액값, 여행통화)
+        val 변환금액 = viewModel.convertToStandardCurrency(금액값, 여행통화)
         return if (변환금액 != null) {
             "$기본문자열 (${String.format("%,.0f", 변환금액)}$표준통화표시)"
         } else 기본문자열
@@ -68,7 +68,7 @@ fun PersonUsageHistoryScreen(
             TopAppBar(
                 title = { Text("${현재사람정보?.person?.name ?: "알수없음"}의 소비 내역") },
                 navigationIcon = {
-                    IconButton(onClick = 화면닫기함수) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
                     }
                 }
@@ -192,8 +192,6 @@ fun PersonUsageHistoryScreen(
                 }
             } else {
                 items(소비기록들.value) { 소비항목 ->
-                    var 카드확장상태 by remember { mutableStateOf(false) }
-                    
                     Card(
                         shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(
@@ -237,7 +235,7 @@ fun PersonUsageHistoryScreen(
                                             text = 소비항목.description,
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = if (카드확장상태) Int.MAX_VALUE else 1,
+                                            maxLines = 2,
                                             overflow = TextOverflow.Ellipsis
                                         )
                                     }

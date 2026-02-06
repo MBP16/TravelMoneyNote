@@ -35,16 +35,16 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonAssetHistoryScreen(
-    vmCore: MainViewModel,
-    targetPersonIdx: Long,
-    goBackCallback: () -> Unit
+    viewModel: MainViewModel,
+    personId: Long,
+    onNavigateBack: () -> Unit
 ) {
-    val peopleBalanceFlow = vmCore.getPersonsWithBalance().collectAsState(initial = emptyList())
-    val foundPersonData = peopleBalanceFlow.value.find { it.person.id == targetPersonIdx }
-    val moneyFlowRecords = vmCore.getTransactionsForPerson(targetPersonIdx).collectAsState(initial = emptyList())
-    val activeCurrencyCode by vmCore.currentCurrency.collectAsState()
-    val baseCurrencyCode by vmCore.standardCurrency.collectAsState()
-    val rateDataMap by vmCore.exchangeRates.collectAsState()
+    val peopleBalanceFlow = viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
+    val foundPersonData = peopleBalanceFlow.value.find { it.person.id == personId }
+    val moneyFlowRecords = viewModel.getTransactionsForPerson(personId).collectAsState(initial = emptyList())
+    val activeCurrencyCode by viewModel.currentCurrency.collectAsState()
+    val baseCurrencyCode by viewModel.standardCurrency.collectAsState()
+    val rateDataMap by viewModel.exchangeRates.collectAsState()
     
     val mainSymbol = availableCurrencies.find { it.code == activeCurrencyCode }?.symbol ?: "₩"
     val baseSymbol = availableCurrencies.find { it.code == baseCurrencyCode }?.symbol ?: "₩"
@@ -67,7 +67,7 @@ fun PersonAssetHistoryScreen(
         }
         val primaryText = "$cleanAmount$mainSymbol"
         if (!needsConversionDisplay) return primaryText
-        val convertedVal = vmCore.convertToStandardCurrency(cashAmount, activeCurrencyCode)
+        val convertedVal = viewModel.convertToStandardCurrency(cashAmount, activeCurrencyCode)
         return if (convertedVal != null) {
             "$primaryText (${String.format("%,.0f", convertedVal)}$baseSymbol)"
         } else primaryText
@@ -80,7 +80,7 @@ fun PersonAssetHistoryScreen(
         ) {
             AddCashScreen(
                 person = foundPersonData!!.person,
-                viewModel = vmCore,
+                viewModel = viewModel,
                 onDismiss = {
                     coroutineHandler.launch { sheetStateObj.hide() }.invokeOnCompletion {
                         if (!sheetStateObj.isVisible) {
@@ -101,10 +101,10 @@ fun PersonAssetHistoryScreen(
                 TextButton(
                     onClick = {
                         recordToRemove?.let { rec ->
-                            vmCore.deleteCashEntry(
+                            viewModel.deleteCashEntry(
                                 CashEntry(
                                     id = rec.id,
-                                    personId = targetPersonIdx,
+                                    personId = personId,
                                     amount = rec.amount,
                                     description = rec.description,
                                     createdAt = rec.createdAt
@@ -155,10 +155,10 @@ fun PersonAssetHistoryScreen(
                     onClick = {
                         val updatedAmt = amtInput.toDoubleOrNull()
                         if (updatedAmt != null) {
-                            vmCore.updateCashEntry(
+                            viewModel.updateCashEntry(
                                 CashEntry(
                                     id = modRec.id,
-                                    personId = targetPersonIdx,
+                                    personId = personId,
                                     amount = updatedAmt,
                                     description = descInput,
                                     createdAt = modRec.createdAt
@@ -180,7 +180,7 @@ fun PersonAssetHistoryScreen(
             TopAppBar(
                 title = { Text("${foundPersonData?.person?.name ?: "알수없음"}의 자산 변동") },
                 navigationIcon = {
-                    IconButton(onClick = goBackCallback) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
                     }
                 }
