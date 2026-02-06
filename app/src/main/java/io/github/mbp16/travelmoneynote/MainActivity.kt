@@ -209,6 +209,24 @@ fun TravelMoneyNoteApp(snackbarHostState: SnackbarHostState) {
                 PersonDetailScreen(
                     viewModel = viewModel,
                     personId = personId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToAssetHistory = { navController.navigate("person_asset_history/$it") },
+                    onNavigateToUsageHistory = { navController.navigate("person_usage_history/$it") }
+                )
+            }
+            composable("person_asset_history/{personId}") { backStackEntry ->
+                val personId = backStackEntry.arguments?.getString("personId")?.toLongOrNull() ?: 0L
+                io.github.mbp16.travelmoneynote.ui.screens.PersonAssetHistoryScreen(
+                    viewModel = viewModel,
+                    personId = personId,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("person_usage_history/{personId}") { backStackEntry ->
+                val personId = backStackEntry.arguments?.getString("personId")?.toLongOrNull() ?: 0L
+                io.github.mbp16.travelmoneynote.ui.screens.PersonUsageHistoryScreen(
+                    viewModel = viewModel,
+                    personId = personId,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
