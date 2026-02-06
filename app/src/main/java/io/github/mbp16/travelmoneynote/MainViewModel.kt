@@ -43,6 +43,15 @@ data class ExpenseUserWithPerson(
     val personName: String
 )
 
+data class UsageItem(
+    val expenseId: Long,
+    val title: String,
+    val amount: Double,
+    val description: String,
+    val payerNames: List<String>,
+    val createdAt: Long
+)
+
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
     private val travelDao = database.travelDao()
@@ -377,6 +386,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             (cashTransactions + paymentTransactions).sortedByDescending { it.createdAt }
+        }
+    }
+
+    fun getUsageHistoryForPerson(personId: Long): Flow<List<UsageItem>> {
+        return combine(
+            expenseUserDao.getExpenseUsersForPerson(personId),
+            expenseDao.getAllExpenses(),
+            paymentDao.getAllPayments(),
+            persons
+        ) { 사용기록목록, 지출목록, 결제목록, 인물목록 ->
+            val 인물맵 = 인물목록.associateBy { it.id }
+            val 지출맵 = 지출목록.associateBy { it.id }
+            
+            사용기록목록.mapNotNull { 소비항목 ->
+                지출맵[소비항목.expenseId]?.let { 해당지출 ->
+                    val 납부자들 = 결제목록
+                        .filter { it.expenseId == 해당지출.id }
+                        .mapNotNull { 결제건 -> 인물맵[결제건.personId]?.name }
+                    
+                    UsageItem(
+                        expenseId = 해당지출.id,
+                        title = 해당지출.title,
+                        amount = 소비항목.amount,
+                        description = 소비항목.description,
+                        payerNames = 납부자들,
+                        createdAt = 해당지출.createdAt
+                    )
+                }
+            }.sortedByDescending { it.createdAt }
         }
     }
 
