@@ -374,7 +374,7 @@ fun PersonAssetHistoryScreen(
                             
                             Text(
                                 text = "${if (flowRec.isPositive) "+" else "-"}${formatMoneyWithRate(flowRec.amount)}",
-                                style = MaterialTheme.typography.titleLarge,
+                                style = MaterialTheme.typography.titleSmall,
                                 color = if (flowRec.isPositive)
                                     MaterialTheme.colorScheme.primary
                                 else
