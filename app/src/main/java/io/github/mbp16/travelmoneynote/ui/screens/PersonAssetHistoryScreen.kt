@@ -234,39 +234,33 @@ fun PersonAssetHistoryScreen(
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            Column {
-                                Text(
-                                    text = "누적 입금",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                )
-                                Text(
-                                    text = formatMoneyWithRate(
-                                        moneyFlowRecords.value.filter { it.isPositive }.sumOf { it.amount }
-                                    ),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                        Column {
+                            Text(
+                                text = "누적 입금",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = formatMoneyWithRate(
+                                    moneyFlowRecords.value.filter { it.isPositive }.sumOf { it.amount }
+                                ),
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                             }
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "누적 출금",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                )
-                                Text(
-                                    text = formatMoneyWithRate(
-                                        moneyFlowRecords.value.filter { !it.isPositive }.sumOf { it.amount }
-                                    ),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "누적 출금",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = formatMoneyWithRate(
+                                    moneyFlowRecords.value.filter { !it.isPositive }.sumOf { it.amount }
+                                ),
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }
