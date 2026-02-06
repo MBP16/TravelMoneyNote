@@ -362,7 +362,6 @@ fun PersonDetailScreen(
                             Box(
                                 modifier = Modifier
                                     .size(48.dp)
-                                    .clip(RoundedCornerShape(12.dp))
                                     .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)),
                                 contentAlignment = Alignment.Center
                             ) {
