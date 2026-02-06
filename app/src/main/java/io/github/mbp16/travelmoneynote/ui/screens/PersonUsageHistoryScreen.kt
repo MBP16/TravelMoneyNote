@@ -141,7 +141,7 @@ fun PersonUsageHistoryScreen(
                             )
                             Text(
                                 text = formatMoney(totalMoney),
-                                style = MaterialTheme.typography.headlineMedium,
+                                style = MaterialTheme.typography.titleLarge,
                                 color = MaterialTheme.colorScheme.tertiary
                             )
                         }
