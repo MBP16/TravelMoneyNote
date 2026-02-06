@@ -37,11 +37,14 @@ data class TransactionItem(
 fun PersonDetailScreen(
     viewModel: MainViewModel,
     personId: Long,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToAssetHistory: (Long) -> Unit = {},
+    onNavigateToUsageHistory: (Long) -> Unit = {}
 ) {
     val personsWithBalance by viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
     val personWithBalance = personsWithBalance.find { it.person.id == personId }
     val transactions by viewModel.getTransactionsForPerson(personId).collectAsState(initial = emptyList())
+    val usageHistory by viewModel.getUsageHistoryForPerson(personId).collectAsState(initial = emptyList())
     val settlements by viewModel.getSettlementsForTravel().collectAsState(initial = emptyList())
     val currentCurrency by viewModel.currentCurrency.collectAsState()
     val standardCurrency by viewModel.standardCurrency.collectAsState()
@@ -51,11 +54,6 @@ fun PersonDetailScreen(
     val standardCurrencySymbol = availableCurrencies.find { it.code == standardCurrency }?.symbol ?: "₩"
     val showConversion = currentCurrency != standardCurrency && exchangeRates != null
     val dateFormat = remember { SimpleDateFormat("yyyy.MM.dd HH:mm", Locale.getDefault()) }
-
-    // 현금 추가 아랫 모달
-    var showAddCashSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
 
     // 이 사람이 받아야 할 금액 (다른 사람들이 이 사람에게)
     val toReceive = settlements.filter { it.toPersonId == personId }
@@ -74,110 +72,6 @@ fun PersonDetailScreen(
         return if (converted != null) {
             "$base (${String.format("%,.0f", converted)}$standardCurrencySymbol)"
         } else base
-    }
-    
-    var transactionToDelete by remember { mutableStateOf<TransactionItem?>(null) }
-    var transactionToEdit by remember { mutableStateOf<TransactionItem?>(null) }
-
-    if (showAddCashSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showAddCashSheet = false },
-            sheetState = sheetState
-        ) {
-            AddCashScreen(
-                person = personWithBalance!!.person,
-                viewModel = viewModel,
-                onDismiss = {
-                    scope.launch { sheetState.hide() }.invokeOnCompletion {
-                        if (!sheetState.isVisible) {
-                            showAddCashSheet = false
-                        }
-                    }
-                }
-            )
-        }
-    }
-
-    if (transactionToDelete != null) {
-        AlertDialog(
-            onDismissRequest = { transactionToDelete = null },
-            title = { Text("삭제 확인") },
-            text = { Text("정말 삭제하시겠습니까?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        transactionToDelete?.let { t ->
-                            viewModel.deleteCashEntry(
-                                CashEntry(
-                                    id = t.id,
-                                    personId = personId,
-                                    amount = t.amount,
-                                    description = t.description,
-                                    createdAt = t.createdAt
-                                )
-                            )
-                        }
-                        transactionToDelete = null
-                    }
-                ) { Text("삭제", color = MaterialTheme.colorScheme.error) }
-            },
-            dismissButton = {
-                TextButton(onClick = { transactionToDelete = null }) { Text("취소") }
-            }
-        )
-    }
-
-    if (transactionToEdit != null) {
-        val t = transactionToEdit!!
-        var amount by remember(t) { 
-            mutableStateOf(if (t.amount % 1.0 == 0.0) String.format("%.0f", t.amount) else t.amount.toString()) 
-        }
-        var description by remember(t) { mutableStateOf(t.description) }
-
-        AlertDialog(
-            onDismissRequest = { transactionToEdit = null },
-            title = { Text("현금 추가 수정") },
-            text = {
-                Column {
-                    OutlinedTextField(
-                        value = amount,
-                        onValueChange = { if (it.all { char -> char.isDigit() || char == '.' }) amount = it },
-                        label = { Text("금액") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        label = { Text("내용") },
-                        singleLine = true
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val newAmount = amount.toDoubleOrNull()
-                        if (newAmount != null) {
-                            viewModel.updateCashEntry(
-                                CashEntry(
-                                    id = t.id,
-                                    personId = personId,
-                                    amount = newAmount,
-                                    description = description,
-                                    createdAt = t.createdAt
-                                )
-                            )
-                            transactionToEdit = null
-                        }
-                    }
-                ) { Text("저장") }
-            },
-            dismissButton = {
-                TextButton(onClick = { transactionToEdit = null }) { Text("취소") }
-            }
-        )
     }
     
     Scaffold(
@@ -351,107 +245,163 @@ fun PersonDetailScreen(
             
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Text(
+                    text = "활동 요약",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            item {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .dropShadow(
+                            shape = RoundedCornerShape(16.dp),
+                            shadow = Shadow(
+                                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.12f),
+                                radius = 10.dp,
+                                spread = 1.dp,
+                                offset = DpOffset(0.dp, 5.dp)
+                            )
+                        )
                 ) {
-                    Text(
-                        text = "자산 변동 내역",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Button(
-                        onClick = {
-                            showAddCashSheet = true
-                        },
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("현금 추가")
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "💰",
+                                    style = MaterialTheme.typography.headlineSmall
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column {
+                                Text(
+                                    text = "자산 변동",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                if (transactions.isEmpty()) {
+                                    Text(
+                                        text = "아직 변동 없음",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                                    )
+                                } else {
+                                    val lastTransaction = transactions.firstOrNull()
+                                    Text(
+                                        text = "${transactions.size}건 • ${
+                                            lastTransaction?.let { dateFormat.format(Date(it.createdAt)) } ?: ""
+                                        }",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
+                        FilledTonalButton(
+                            onClick = { onNavigateToAssetHistory(personId) },
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("보기")
+                        }
                     }
                 }
             }
-            
-            if (transactions.isEmpty()) {
-                item {
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .dropShadow(
-                                shape = RoundedCornerShape(16.dp),
-                                shadow = Shadow(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                                    radius = 8.dp,
-                                    offset = DpOffset(0.dp, 4.dp)
-                                )
+
+            item {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .dropShadow(
+                            shape = RoundedCornerShape(16.dp),
+                            shadow = Shadow(
+                                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                                radius = 10.dp,
+                                spread = 1.dp,
+                                offset = DpOffset(0.dp, 5.dp)
                             )
-                    ) {
-                        Text(
-                            text = "변동 내역이 없습니다",
-                            modifier = Modifier.padding(16.dp),
-                            style = MaterialTheme.typography.bodyMedium
                         )
-                    }
-                }
-            } else {
-                items(transactions) { transaction ->
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
+                ) {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .dropShadow(
-                                shape = RoundedCornerShape(16.dp),
-                                shadow = Shadow(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
-                                    radius = 8.dp,
-                                    offset = DpOffset(0.dp, 4.dp)
-                                )
-                            )
+                            .padding(18.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Row(
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = transaction.description.ifEmpty { transaction.type },
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                    Text(
-                                        text = "${transaction.type} • ${dateFormat.format(Date(transaction.createdAt))}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
                                 Text(
-                                    text = "${if (transaction.isPositive) "+" else "-"}${formatWithConversion(transaction.amount)}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = if (transaction.isPositive)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.error
+                                    text = "🛍️",
+                                    style = MaterialTheme.typography.headlineSmall
                                 )
                             }
-                            if (transaction.type == "현금 추가") {
-                                HorizontalDivider()
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 8.dp),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
-                                    TextButton(onClick = { transactionToEdit = transaction }) {
-                                        Text("수정")
-                                    }
-                                    TextButton(onClick = { transactionToDelete = transaction }) {
-                                        Text("삭제", color = MaterialTheme.colorScheme.error)
-                                    }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column {
+                                Text(
+                                    text = "소비 내역",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                if (usageHistory.isEmpty()) {
+                                    Text(
+                                        text = "아직 사용 없음",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                    )
+                                } else {
+                                    val totalUsage = usageHistory.sumOf { it.amount }
+                                    Text(
+                                        text = "${usageHistory.size}건 • 총 ${formatWithConversion(totalUsage)}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                                    )
                                 }
                             }
+                        }
+                        FilledTonalButton(
+                            onClick = { onNavigateToUsageHistory(personId) },
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("보기")
                         }
                     }
                 }
