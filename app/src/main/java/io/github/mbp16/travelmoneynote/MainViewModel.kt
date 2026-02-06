@@ -395,23 +395,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             expenseDao.getAllExpenses(),
             paymentDao.getAllPayments(),
             persons
-        ) { 사용기록목록, 지출목록, 결제목록, 인물목록 ->
-            val 인물맵 = 인물목록.associateBy { it.id }
-            val 지출맵 = 지출목록.associateBy { it.id }
+        ) { useList, expenseList, payList, personList ->
+            val personMap = personList.associateBy { it.id }
+            val expenseMap = expenseList.associateBy { it.id }
             
-            사용기록목록.mapNotNull { 소비항목 ->
-                지출맵[소비항목.expenseId]?.let { 해당지출 ->
-                    val 납부자들 = 결제목록
-                        .filter { it.expenseId == 해당지출.id }
-                        .mapNotNull { 결제건 -> 인물맵[결제건.personId]?.name }
+            useList.mapNotNull { useItem ->
+                expenseMap[useItem.expenseId]?.let { expense ->
+                    val payers = payList
+                        .filter { it.expenseId == expense.id }
+                        .mapNotNull { pay -> personMap[pay.personId]?.name }
                     
                     UsageItem(
-                        expenseId = 해당지출.id,
-                        title = 해당지출.title,
-                        amount = 소비항목.amount,
-                        description = 소비항목.description,
-                        payerNames = 납부자들,
-                        createdAt = 해당지출.createdAt
+                        expenseId = expense.id,
+                        title = expense.title,
+                        amount = useItem.amount,
+                        description = useItem.description,
+                        payerNames = payers,
+                        createdAt = expense.createdAt
                     )
                 }
             }.sortedByDescending { it.createdAt }
