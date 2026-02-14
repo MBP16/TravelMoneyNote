@@ -3,17 +3,13 @@ package io.github.mbp16.travelmoneynote.widget
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.glance.GlanceId
-import androidx.glance.GlanceModifier
-import androidx.glance.GlanceTheme
+import androidx.glance.*
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
-import androidx.glance.background
 import androidx.glance.layout.*
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
@@ -180,6 +176,8 @@ class TravelSummaryWidget : GlanceAppWidget() {
 
     @Composable
     private fun DataContent(data: WidgetData) {
+        val context = LocalContext.current
+        
         fun formatAmount(amount: Double): String {
             return if (amount % 1.0 == 0.0) {
                 amount.toInt().toString()
@@ -231,7 +229,7 @@ class TravelSummaryWidget : GlanceAppWidget() {
             ) {
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
-                        text = stringResource(R.string.widget_total_expense),
+                        text = context.getString(R.string.widget_total_expense),
                         style = TextStyle(
                             color = GlanceTheme.colors.onBackground,
                             fontSize = 16.sp
@@ -249,7 +247,7 @@ class TravelSummaryWidget : GlanceAppWidget() {
                 }
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
-                        text = stringResource(R.string.widget_today_expense),
+                        text = context.getString(R.string.widget_today_expense),
                         style = TextStyle(
                             color = GlanceTheme.colors.onBackground,
                             fontSize = 16.sp
@@ -274,7 +272,7 @@ class TravelSummaryWidget : GlanceAppWidget() {
             ) {
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
-                        text = stringResource(R.string.widget_average_expense),
+                        text = context.getString(R.string.widget_average_expense),
                         style = TextStyle(
                             color = GlanceTheme.colors.onBackground,
                             fontSize = 16.sp
@@ -292,7 +290,7 @@ class TravelSummaryWidget : GlanceAppWidget() {
                 }
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
-                        text = stringResource(R.string.widget_remaining_cash),
+                        text = context.getString(R.string.widget_remaining_cash),
                         style = TextStyle(
                             color = GlanceTheme.colors.onBackground,
                             fontSize = 16.sp
