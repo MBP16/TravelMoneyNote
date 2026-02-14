@@ -13,11 +13,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -30,8 +26,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.github.mbp16.travelmoneynote.ui.screens.ExpenseScreen
 import io.github.mbp16.travelmoneynote.ui.screens.HomeScreen
-import io.github.mbp16.travelmoneynote.ui.screens.SettingsScreen
 import io.github.mbp16.travelmoneynote.ui.screens.PersonDetailScreen
+import io.github.mbp16.travelmoneynote.ui.screens.SettingsScreen
 import io.github.mbp16.travelmoneynote.ui.theme.TravelMoneyNoteTheme
 
 class MainActivity : ComponentActivity() {
@@ -49,7 +45,6 @@ class MainActivity : ComponentActivity() {
             activity = this,
             launcher = updateLauncher,
             priorityThreshold = 4,
-            exitIfDeclined = false,
             snackbarHostState = snackbarHostState,
             scope = lifecycleScope
         )

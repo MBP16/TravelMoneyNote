@@ -24,7 +24,6 @@ class InAppUpdateHelper(
     private val activity: Activity,
     private val launcher: ActivityResultLauncher<IntentSenderRequest>,
     private val priorityThreshold: Int = 4, //중요도. 이거 이상이면 강제 업데이트 창 띄움
-    private val exitIfDeclined: Boolean = true,
     private val snackbarHostState: SnackbarHostState,
     private val scope: CoroutineScope
 ) {
@@ -82,7 +81,7 @@ class InAppUpdateHelper(
         if (resultCode != Activity.RESULT_OK) {
             Log.d("InAppUpdateHelper", "Update flow failed! Result code: $resultCode")
             // 강제 업데이트(IMMEDIATE)였는데 취소/실패했다면 앱 종료
-            if (currentUpdateType == AppUpdateType.IMMEDIATE && exitIfDeclined) {
+            if (currentUpdateType == AppUpdateType.IMMEDIATE) {
                 activity.finishAffinity()
             }
         }
