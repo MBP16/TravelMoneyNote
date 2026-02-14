@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,11 +26,13 @@ import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import io.github.mbp16.travelmoneynote.MainViewModel
+import io.github.mbp16.travelmoneynote.R
 import io.github.mbp16.travelmoneynote.data.PaymentMethod
 import io.github.mbp16.travelmoneynote.data.Person
 import io.github.mbp16.travelmoneynote.ui.components.ImageViewerDialog
@@ -235,7 +238,7 @@ fun ExpenseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (expenseId == null) "소비 추가" else "소비 수정") },
+                title = { Text(if (expenseId == null) stringResource(R.string.expense_title_add) else stringResource(R.string.expense_title_edit)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
@@ -243,7 +246,7 @@ fun ExpenseScreen(
                 },
                 actions = {
                     TextButton(onClick = onSave, enabled = isValid) {
-                        Text("저장")
+                        Text(stringResource(R.string.save))
                     }
                 }
             )
@@ -260,7 +263,7 @@ fun ExpenseScreen(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("제목") },
+                    label = { Text(stringResource(R.string.expense_title)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -289,7 +292,7 @@ fun ExpenseScreen(
                         } else {
                             String.format("%.2f", totalAmount).trimEnd('0').trimEnd('.')
                         }
-                        val baseText = "총 금액: $formattedAmount$currencySymbol"
+                        val baseText = stringResource(R.string.expense_total_amount, formattedAmount, currencySymbol)
                         val displayText = if (showConversion) {
                             val converted = viewModel.convertToStandardCurrency(totalAmount, currentCurrency)
                             if (converted != null) {
@@ -307,7 +310,7 @@ fun ExpenseScreen(
             
             item {
                 Text(
-                    text = "결제 내역",
+                    text = stringResource(R.string.expense_pay_history),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -315,7 +318,7 @@ fun ExpenseScreen(
             if (persons.isEmpty()) {
                 item {
                     Text(
-                        text = "먼저 사람을 추가해주세요",
+                        text = stringResource(R.string.expense_no_people_warning),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -351,7 +354,7 @@ fun ExpenseScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("결제자 추가")
+                        Text(stringResource(R.string.expense_payer_add))
                     }
                 }
 
@@ -363,7 +366,7 @@ fun ExpenseScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "사용자",
+                            text = stringResource(R.string.expense_user),
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f)
                         )
@@ -373,12 +376,12 @@ fun ExpenseScreen(
                             OutlinedButton(
                                 onClick = copyFromPayments,
                             ) {
-                                Text("결제내역 그대로")
+                                Text(stringResource(R.string.expense_user_payer_same))
                             }
                             Button(
                                 onClick = divideEvenlyAmount,
                             ) {
-                                Text("1/n 정산")
+                                Text(stringResource(R.string.expense_user_divide_by_n))
                             }
                         }
                     }
@@ -414,7 +417,7 @@ fun ExpenseScreen(
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("사용자 추가")
+                        Text(stringResource(R.string.expense_user_add))
                     }
                 }
 
@@ -437,7 +440,13 @@ fun ExpenseScreen(
                             )
                         ) {
                             Text(
-                                text = "⚠️ 결제 금액($formattedTotalAmount$currencySymbol)과 사용자 합계($formattedTotalUserAmount$currencySymbol)가 다릅니다",
+                                text = stringResource(
+                                    R.string.expense_payer_user_different_warning,
+                                    formattedTotalAmount,
+                                    currencySymbol,
+                                    formattedTotalUserAmount,
+                                    currencySymbol
+                                ),
                                 modifier = Modifier.padding(16.dp),
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
@@ -449,7 +458,7 @@ fun ExpenseScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "영수증 사진",
+                    text = stringResource(R.string.expense_bill_image),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -468,13 +477,15 @@ fun ExpenseScreen(
                     ) {
                         Icon(Icons.Default.PhotoCamera, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("카메라")
+                        Text(stringResource(R.string.expense_bill_image_camera))
                     }
                     OutlinedButton(
                         onClick = { imagePickerLauncher.launch("image/*") },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("갤러리")
+                        Icon(Icons.Default.Image, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.expense_bill_image_gallery))
                     }
                 }
             }
@@ -525,7 +536,7 @@ fun ExpenseScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("메모 (선택)") },
+                    label = { Text(stringResource(R.string.expense_memo)) },
                     modifier = Modifier.fillMaxWidth().height(300.dp),
                     singleLine = false
                 )
@@ -535,7 +546,7 @@ fun ExpenseScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "사용 일시",
+                    text = stringResource(R.string.expense_use_date),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -567,7 +578,7 @@ fun ExpenseScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "사용 일시",
+                            text = stringResource(R.string.expense_use_date),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -620,12 +631,12 @@ fun ExpenseScreen(
                     showDatePicker = false
                     showTimePicker = true
                 }) {
-                    Text("다음")
+                    Text(stringResource(R.string.expense_datetimepicker_next))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         ) {
@@ -658,12 +669,12 @@ fun ExpenseScreen(
                     createdAt = calendar.timeInMillis
                     showTimePicker = false
                 }) {
-                    Text("확인")
+                    Text(stringResource(R.string.confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
             },
             text = {
@@ -716,7 +727,7 @@ fun PaymentEntryCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("결제 정보", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.expense_paymentcard_title), style = MaterialTheme.typography.titleSmall)
                 if (canDelete) {
                     IconButton(onClick = onDelete) {
                         Icon(
@@ -736,7 +747,7 @@ fun PaymentEntryCard(
                     value = payment.person?.name ?: "",
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("결제자") },
+                    label = { Text(stringResource(R.string.expense_paymentcard_payer)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = personExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -761,7 +772,7 @@ fun PaymentEntryCard(
             OutlinedTextField(
                 value = payment.amount,
                 onValueChange = { onPaymentChange(payment.copy(amount = it.filter { c -> c.isDigit() || c == '.' })) },
-                label = { Text("금액") },
+                label = { Text(stringResource(R.string.expense_paymentcard_amount)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
@@ -773,10 +784,10 @@ fun PaymentEntryCard(
                 onExpandedChange = { methodExpanded = !methodExpanded }
             ) {
                 OutlinedTextField(
-                    value = if (payment.method == PaymentMethod.CASH) "현금" else "카드",
+                    value = if (payment.method == PaymentMethod.CASH) stringResource(R.string.cash) else stringResource(R.string.card),
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("결제 수단") },
+                    label = { Text(stringResource(R.string.expense_paymentcard_payment_method)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = methodExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -787,14 +798,14 @@ fun PaymentEntryCard(
                     onDismissRequest = { methodExpanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("현금") },
+                        text = { Text(stringResource(R.string.cash)) },
                         onClick = {
                             onPaymentChange(payment.copy(method = PaymentMethod.CASH))
                             methodExpanded = false
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("카드") },
+                        text = { Text(stringResource(R.string.card)) },
                         onClick = {
                             onPaymentChange(payment.copy(method = PaymentMethod.CARD))
                             methodExpanded = false
@@ -840,7 +851,7 @@ fun ExpenseUserEntryCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("사용자 정보", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.expense_usercard_title), style = MaterialTheme.typography.titleSmall)
                 if (canDelete) {
                     IconButton(onClick = onDelete) {
                         Icon(
@@ -860,7 +871,7 @@ fun ExpenseUserEntryCard(
                     value = expenseUser.person?.name ?: "",
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("사용자") },
+                    label = { Text(stringResource(R.string.expense_usercard_user)) },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = personExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -885,7 +896,7 @@ fun ExpenseUserEntryCard(
             OutlinedTextField(
                 value = expenseUser.amount,
                 onValueChange = { onExpenseUserChange(expenseUser.copy(amount = it.filter { c -> c.isDigit() || c == '.' })) },
-                label = { Text("금액") },
+                label = { Text(stringResource(R.string.expense_usercard_amount)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
@@ -895,7 +906,7 @@ fun ExpenseUserEntryCard(
             OutlinedTextField(
                 value = expenseUser.description,
                 onValueChange = { onExpenseUserChange(expenseUser.copy(description = it)) },
-                label = { Text("메모 (선택)") },
+                label = { Text(stringResource(R.string.expense_memo)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
