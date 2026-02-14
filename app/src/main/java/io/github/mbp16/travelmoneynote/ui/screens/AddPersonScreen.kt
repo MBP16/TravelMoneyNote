@@ -3,12 +3,17 @@ package io.github.mbp16.travelmoneynote.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
+import io.github.mbp16.travelmoneynote.R
 
 @Composable
 fun AddPersonScreen(
@@ -25,14 +30,14 @@ fun AddPersonScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "사람 추가",
+            text = stringResource(R.string.home_addpersonmodal_title),
             style = MaterialTheme.typography.titleLarge
         )
 
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("이름") },
+            label = { Text(stringResource(R.string.home_addpersonmodal_name)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -56,7 +61,7 @@ fun AddPersonScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = name.isNotBlank()
         ) {
-            Text("추가")
+            Text(stringResource(R.string.add))
         }
         
         Spacer(modifier = Modifier.height(16.dp))

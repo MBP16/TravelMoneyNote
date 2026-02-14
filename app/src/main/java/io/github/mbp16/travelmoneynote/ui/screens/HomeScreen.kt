@@ -1,5 +1,6 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,17 +17,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.PersonWithBalance
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import io.github.mbp16.travelmoneynote.R
+import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.*
 
+@SuppressLint("LocalContextConfigurationRead")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -36,6 +38,9 @@ fun HomeScreen(
     onNavigateToPersonDetail: (Long) -> Unit,
     onNavigateToEditExpense: (Long) -> Unit
 ) {
+    val context = LocalContext.current
+    val currentLocale = context.resources.configuration.locales[0]
+
     val personsWithBalance by viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
     val expenses by viewModel.expenses.collectAsState()
     val currentCurrency by viewModel.currentCurrency.collectAsState()
@@ -54,7 +59,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     val groupedExpenses = remember(expenses) {
-        expenses.groupBy { formatDate(it.createdAt) }
+        expenses.groupBy { formatDate(it.createdAt, currentLocale) }
     }
     
     Scaffold(
@@ -93,17 +98,17 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Text(
-                        text = "여행을 선택해주세요",
+                        text = stringResource(R.string.home_select_trip),
                         style = MaterialTheme.typography.titleLarge
                     )
                     Text(
-                        text = "설정에서 여행을 추가하고 선택할 수 있습니다",
+                        text = stringResource(R.string.home_select_trip_detail),
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Button(onClick = onNavigateToSettings) {
                         Icon(Icons.Default.Settings, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("설정으로 이동")
+                        Text(stringResource(R.string.home_navigate_to_settings))
                     }
                 }
             }
@@ -122,7 +127,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "인원 현황",
+                            text = stringResource(R.string.home_person_status),
                             style = MaterialTheme.typography.titleLarge
                         )
                         Button(
@@ -130,7 +135,7 @@ fun HomeScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("사람 추가")
+                            Text(stringResource(R.string.home_add_person))
                         }
                     }
                 }
@@ -151,7 +156,7 @@ fun HomeScreen(
                                 )
                         ) {
                             Text(
-                                text = "등록된 인원이 없습니다",
+                                text = stringResource(R.string.home_no_person),
                                 modifier = Modifier.padding(16.dp),
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -182,7 +187,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "소비 내역",
+                            text = stringResource(R.string.home_expense_list),
                             style = MaterialTheme.typography.titleLarge
                         )
                         Button(
@@ -190,7 +195,7 @@ fun HomeScreen(
                         ) {
                             Icon(Icons.Default.Add, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("소비 추가")
+                            Text(stringResource(R.string.home_add_expense))
                         }
                     }
                 }
@@ -211,7 +216,7 @@ fun HomeScreen(
                                 )
                         ) {
                             Text(
-                                text = "소비 내역이 없습니다",
+                                text = stringResource(R.string.home_no_expense),
                                 modifier = Modifier.padding(16.dp),
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -236,7 +241,8 @@ fun HomeScreen(
                                 showConversion = showConversion,
                                 convertToStandard = { amount -> viewModel.convertToStandardCurrency(amount, currentCurrency) },
                                 onClick = { onNavigateToEditExpense(expense.id) },
-                                onDelete = { viewModel.deleteExpense(expense) }
+                                onDelete = { viewModel.deleteExpense(expense) },
+                                locale = currentLocale
                             )
                         }
                     }
@@ -322,19 +328,31 @@ fun PersonBalanceCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "보유 현금: ${formatWithConversion(personWithBalance.totalCash)}",
+                    text = stringResource(
+                        R.string.home_personcard_first_cash,
+                        formatWithConversion(personWithBalance.totalCash)
+                    ),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "현금 사용: ${formatWithConversion(personWithBalance.cashSpent)}",
+                    text = stringResource(
+                        R.string.home_personcard_used_cash,
+                        formatWithConversion(personWithBalance.cashSpent)
+                    ),
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = "카드 사용: ${formatWithConversion(personWithBalance.cardSpent)}",
+                    text = stringResource(
+                        R.string.home_personcard_used_card,
+                        formatWithConversion(personWithBalance.cardSpent)
+                    ),
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = "남은 현금: ${formatWithConversion(personWithBalance.remainingCash)}",
+                    text = stringResource(
+                        R.string.home_personcard_remaining_cash,
+                        formatWithConversion(personWithBalance.remainingCash)
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (personWithBalance.remainingCash < 0) 
                         MaterialTheme.colorScheme.error 
@@ -349,14 +367,14 @@ fun PersonBalanceCard(
                 }) {
                     Icon(
                         Icons.Default.Edit,
-                        contentDescription = "수정",
+                        contentDescription = stringResource(R.string.edit),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
                 IconButton(onClick = { showDeleteDialog = true }) {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "삭제",
+                        contentDescription = stringResource(R.string.delete),
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -367,17 +385,20 @@ fun PersonBalanceCard(
     if (showEditDialog) {
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
-            title = { Text("이름 수정") },
+            title = { Text(stringResource(R.string.home_personeditdialog_title)) },
             text = {
                 OutlinedTextField(
                     value = editName,
                     onValueChange = { editName = it },
-                    label = { Text("이름") },
+                    label = { Text(stringResource(R.string.home_personeditdialog_field_name)) },
                     singleLine = true
                 )
             },
             confirmButton = {
                 TextButton(
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
                     onClick = {
                         if (editName.isNotBlank()) {
                             onEdit(editName.trim())
@@ -385,22 +406,22 @@ fun PersonBalanceCard(
                         }
                     }
                 ) {
-                    Text("저장")
+                    Text(stringResource(R.string.save))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showEditDialog = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
-            }
+            },
         )
     }
 
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("사람 삭제") },
-            text = { Text("정말로 ${personWithBalance.person.name}님을 삭제하시겠습니까?\n관련된 모든 기록이 삭제됩니다.") },
+            title = { Text(stringResource(R.string.home_persondeletedialog_title)) },
+            text = { Text(stringResource(R.string.home_persondeletedialog_detail, personWithBalance.person.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -408,12 +429,12 @@ fun PersonBalanceCard(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -429,7 +450,8 @@ fun ExpenseCard(
     showConversion: Boolean = false,
     convertToStandard: (Double) -> Double? = { null },
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    locale: Locale
 ) {
     val expenseWithPayments by viewModel.getExpenseWithPayments(expense.id).collectAsState(initial = null)
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -479,13 +501,13 @@ fun ExpenseCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = expense.title.ifBlank { "소비" },
+                            text = expense.title.ifBlank { stringResource(R.string.home_expensecard_title_placeholder) },
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.weight(1f, fill = false)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = formatTime(expense.createdAt),
+                            text = formatTime(expense.createdAt, locale),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -499,7 +521,8 @@ fun ExpenseCard(
                 
                 expenseWithPayments?.payments?.forEach { paymentWithPerson ->
                     Text(
-                        text = "${paymentWithPerson.personName}: ${formatWithConversion(paymentWithPerson.payment.amount)} (${if (paymentWithPerson.payment.method == io.github.mbp16.travelmoneynote.data.PaymentMethod.CASH) "현금" else "카드"})",
+                        text = "${paymentWithPerson.personName}: ${formatWithConversion(paymentWithPerson.payment.amount)} (${if (paymentWithPerson.payment.method == io.github.mbp16.travelmoneynote.data.PaymentMethod.CASH) stringResource(
+                            R.string.cash) else stringResource(R.string.card)})",
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
@@ -508,7 +531,9 @@ fun ExpenseCard(
                     Spacer(modifier = Modifier.height(8.dp))
                     val photoCount = expense.photoUris?.split(",")?.size ?: 0
                     Text(
-                        text = if (photoCount > 1) "📷 사진 ${photoCount}장 첨부됨" else "📷 사진 첨부됨",
+                        text = if (photoCount > 1) stringResource(R.string.home_expensecard_photo_text, photoCount) else stringResource(
+                            R.string.home_expensecard_photo_text_placeholder
+                        ),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.secondary
                     )
@@ -518,7 +543,7 @@ fun ExpenseCard(
             IconButton(onClick = { showDeleteDialog = true }) {
                 Icon(
                     Icons.Default.Delete,
-                    contentDescription = "삭제",
+                    contentDescription = stringResource(R.string.delete),
                     tint = MaterialTheme.colorScheme.error
                 )
             }
@@ -528,8 +553,8 @@ fun ExpenseCard(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("소비 내역 삭제") },
-            text = { Text("정말로 이 소비 내역을 삭제하시겠습니까?") },
+            title = { Text(stringResource(R.string.home_expensedeletedialog_title)) },
+            text = { Text(stringResource(R.string.home_expensedeletedialog_detail)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -537,24 +562,24 @@ fun ExpenseCard(
                         showDeleteDialog = false
                     }
                 ) {
-                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
     }
 }
 
-private fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("yyyy년 MM월 dd일 EEEE", Locale.KOREA)
-    return sdf.format(Date(timestamp))
+private fun formatDate(timestamp: Long, locale: Locale): String {
+    val dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, locale)
+    return dateFormat.format(Date(timestamp))
 }
 
-private fun formatTime(timestamp: Long): String {
-    val sdf = SimpleDateFormat("a h:mm", Locale.KOREA)
-    return sdf.format(Date(timestamp))
+private fun formatTime(timestamp: Long, locale: Locale): String {
+    val timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, locale)
+    return timeFormat.format(Date(timestamp))
 }

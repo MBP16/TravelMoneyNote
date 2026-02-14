@@ -1,9 +1,9 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
-import android.widget.Toast
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -25,36 +25,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import io.github.mbp16.travelmoneynote.MainViewModel
+import io.github.mbp16.travelmoneynote.R
 import io.github.mbp16.travelmoneynote.data.Travel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-import io.github.mbp16.travelmoneynote.R
 
 data class Currency(
     val code: String,
-    val name: String,
+    val nameResId: Int,
     val symbol: String
 )
 
 val availableCurrencies = listOf(
-    Currency("KRW", "한국 원", "₩"),
-    Currency("USD", "미국 달러", "$"),
-    Currency("EUR", "유로", "€"),
-    Currency("JPY", "일본 엔", "¥"),
-    Currency("CNY", "중국 위안", "¥"),
-    Currency("GBP", "영국 파운드", "£"),
-    Currency("THB", "태국 바트", "฿"),
-    Currency("VND", "베트남 동", "₫"),
-    Currency("TWD", "대만 달러", "NT$"),
-    Currency("SGD", "싱가포르 달러", "S$"),
-    Currency("AUD", "호주 달러", "A$"),
+    Currency("KRW", R.string.currency_krw, "₩"),
+    Currency("USD", R.string.currency_usd, "$"),
+    Currency("EUR", R.string.currency_eur, "€"),
+    Currency("JPY", R.string.currency_jpy, "¥"),
+    Currency("CNY", R.string.currency_cny, "¥"),
+    Currency("GBP", R.string.currency_gbp, "£"),
+    Currency("THB", R.string.currency_thb, "฿"),
+    Currency("VND", R.string.currency_vnd, "₫"),
+    Currency("TWD", R.string.currency_twd, "NT$"),
+    Currency("SGD", R.string.currency_sgd, "S$"),
+    Currency("AUD", R.string.currency_aud, "A$"),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,7 +90,8 @@ fun SettingsScreen(
             viewModel.exportToFile(it, pendingExportTravelIds) { success ->
                 Toast.makeText(
                     context,
-                    if (success) "내보내기 완료" else "내보내기 실패",
+                    if (success) context.getString(R.string.setting_export_complete)
+                    else context.getString(R.string.setting_export_failure),
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -110,7 +111,7 @@ fun SettingsScreen(
                     pendingImportData = exportData
                     showImportConfirmDialog = true
                 } else {
-                    Toast.makeText(context, "파일을 읽을 수 없습니다", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.setting_cannot_read_file), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -142,7 +143,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "여행 관리",
+                        text = stringResource(R.string.setting_manage_trip),
                         style = MaterialTheme.typography.titleMedium
                     )
                     IconButton(onClick = { showAddTravelDialog = true }) {
@@ -167,7 +168,7 @@ fun SettingsScreen(
                             )
                     ) {
                         Text(
-                            text = "등록된 여행이 없습니다",
+                            text = stringResource(R.string.setting_no_trip_added),
                             modifier = Modifier.padding(16.dp),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -238,7 +239,7 @@ fun SettingsScreen(
 
             item {
                 Text(
-                    text = "기준 화페 설정",
+                    text = stringResource(R.string.setting_standard_currency_title),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -250,10 +251,10 @@ fun SettingsScreen(
                     onExpandedChange = { settingStandardCurrency = it }
                 ) {
                     OutlinedTextField(
-                        value = "${selectedCurrency?.symbol ?: ""} ${selectedCurrency?.name ?: standardCurrency}",
+                        value = if (selectedCurrency != null) "${selectedCurrency.symbol} ${stringResource(selectedCurrency.nameResId)}" else standardCurrency,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("기준 화폐") },
+                        label = { Text(stringResource(R.string.setting_standard_currency_field_title)) },
                         colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
                             focusedLabelColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedLabelColor = MaterialTheme.colorScheme.onSurface,
@@ -273,7 +274,7 @@ fun SettingsScreen(
                     ) {
                         availableCurrencies.forEach { currencyOption ->
                             DropdownMenuItem(
-                                text = { Text("${currencyOption.symbol} ${currencyOption.name}") },
+                                text = { Text("${currencyOption.symbol} ${stringResource(currencyOption.nameResId)}") },
                                 onClick = {
                                     viewModel.setStandardCurrency(currencyOption.code)
                                     settingStandardCurrency = false
@@ -293,7 +294,7 @@ fun SettingsScreen(
             
             item {
                 Text(
-                    text = "데이터 관리",
+                    text = stringResource(R.string.setting_data_manage_title),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -312,7 +313,6 @@ fun SettingsScreen(
                             )
                         )
                         .clickable {
-                            val fileName = "backup_${fileNameFormatter.format(Date())}.zip"
                             showExportSelectDialog = true
                         }
                 ) {
@@ -324,11 +324,11 @@ fun SettingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "파일로 내보내기",
+                                text = stringResource(R.string.setting_export_to_file),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = "모든 데이터와 영수증 사진을 ZIP 파일로 저장합니다",
+                                text = stringResource(R.string.setting_export_to_file_detail),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -362,11 +362,11 @@ fun SettingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "파일에서 불러오기",
+                                text = stringResource(R.string.setting_import_from_file),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                text = "ZIP 또는 JSON 파일에서 데이터를 복원합니다",
+                                text = stringResource(R.string.setting_import_from_file_detail),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -402,12 +402,12 @@ fun SettingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "데이터베이스 초기화",
+                                text = stringResource(R.string.setting_reset_database),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
                             Text(
-                                text = "모든 데이터가 삭제됩니다",
+                                text = stringResource(R.string.setting_reset_database_detail),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.7f)
                             )
@@ -420,7 +420,7 @@ fun SettingsScreen(
     
     if (showAddTravelDialog) {
         TravelDialog(
-            title = "여행 추가",
+            title = stringResource(R.string.setting_tripdialog_title_add),
             onDismiss = { showAddTravelDialog = false },
             onConfirm = { name, startDate, endDate, currency ->
                 viewModel.addTravel(name, startDate, endDate, currency)
@@ -431,7 +431,7 @@ fun SettingsScreen(
     
     showEditTravelDialog?.let { travel ->
         TravelDialog(
-            title = "여행 수정",
+            title = stringResource(R.string.setting_tripdialog_title_edit),
             initialName = travel.name,
             initialStartDate = travel.startDate,
             initialEndDate = travel.endDate,
@@ -447,8 +447,8 @@ fun SettingsScreen(
     showDeleteTravelDialog?.let { travel ->
         AlertDialog(
             onDismissRequest = { showDeleteTravelDialog = null },
-            title = { Text("여행 삭제") },
-            text = { Text("'${travel.name}' 여행을 삭제하시겠습니까?") },
+            title = { Text(stringResource(R.string.setting_tripdeletedialog_title)) },
+            text = { Text(stringResource(R.string.setting_tripdeletedialog_detail, travel.name)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -456,12 +456,12 @@ fun SettingsScreen(
                         showDeleteTravelDialog = null
                     }
                 ) {
-                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteTravelDialog = null }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -470,8 +470,8 @@ fun SettingsScreen(
     if (showResetDialog) {
         AlertDialog(
             onDismissRequest = { showResetDialog = false },
-            title = { Text("데이터베이스 초기화") },
-            text = { Text("정말로 모든 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.") },
+            title = { Text(stringResource(R.string.setting_reset_database)) },
+            text = { Text(stringResource(R.string.setting_reset_database_dialog_detail)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -479,12 +479,12 @@ fun SettingsScreen(
                         showResetDialog = false
                     }
                 ) {
-                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showResetDialog = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -498,10 +498,10 @@ fun SettingsScreen(
                 pendingImportUri = null
                 pendingImportData = null
             },
-            title = { Text("데이터 불러오기") },
+            title = { Text(stringResource(R.string.setting_importdialog_title)) },
             text = {
                 Column {
-                    Text("다음 여행들을 추가합니다:")
+                    Text(stringResource(R.string.setting_importdialog_detail))
                     Spacer(modifier = Modifier.height(8.dp))
                     LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
                         items(importData.travels) { travel ->
@@ -518,7 +518,9 @@ fun SettingsScreen(
                                 )
                                 if (travel.persons.isNotEmpty()) {
                                     Text(
-                                        text = "참가자: ${travel.persons.joinToString(", ") { it.name }}",
+                                        text = context.getString(
+                                            R.string.setting_importdialog_people,
+                                            travel.persons.joinToString(", ") { it.name }),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -541,7 +543,7 @@ fun SettingsScreen(
                         pendingImportData = null
                     }
                 ) {
-                    Text("불러오기")
+                    Text(stringResource(R.string.setting_importdialog_import))
                 }
             },
             dismissButton = {
@@ -550,7 +552,7 @@ fun SettingsScreen(
                     pendingImportUri = null
                     pendingImportData = null
                 }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -603,7 +605,7 @@ private fun TravelDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("여행 이름") },
+                    label = { Text(stringResource(R.string.setting_tripdialog_trip_title)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -619,7 +621,7 @@ private fun TravelDialog(
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("시작일")
+                        Text(stringResource(R.string.setting_tripdialog_start_date))
                         Text(dateFormatter.format(Date(startDate)))
                     }
                 }
@@ -635,7 +637,7 @@ private fun TravelDialog(
                             .padding(16.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("종료일")
+                        Text(stringResource(R.string.setting_tripdialog_end_date))
                         Text(dateFormatter.format(Date(endDate)))
                     }
                 }
@@ -645,10 +647,10 @@ private fun TravelDialog(
                     onExpandedChange = { showCurrencyDropdown = it }
                 ) {
                     OutlinedTextField(
-                        value = "${selectedCurrency?.symbol ?: ""} ${selectedCurrency?.name ?: currency}",
+                        value = if (selectedCurrency != null) "${selectedCurrency.symbol} ${stringResource(selectedCurrency.nameResId)}" else currency,
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("화폐") },
+                        label = { Text(stringResource(R.string.setting_tripdialog_currency)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCurrencyDropdown) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -660,7 +662,7 @@ private fun TravelDialog(
                     ) {
                         availableCurrencies.forEach { currencyOption ->
                             DropdownMenuItem(
-                                text = { Text("${currencyOption.symbol} ${currencyOption.name}") },
+                                text = { Text("${currencyOption.symbol} ${stringResource(currencyOption.nameResId)}") },
                                 onClick = {
                                     currency = currencyOption.code
                                     showCurrencyDropdown = false
@@ -676,12 +678,12 @@ private fun TravelDialog(
                 onClick = { onConfirm(name, startDate, endDate, currency) },
                 enabled = name.isNotBlank()
             ) {
-                Text("확인")
+                Text(stringResource(R.string.confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("취소")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
@@ -695,12 +697,12 @@ private fun TravelDialog(
                     datePickerState.selectedDateMillis?.let { startDate = it }
                     showStartDatePicker = false
                 }) {
-                    Text("확인")
+                    Text(stringResource(R.string.confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showStartDatePicker = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         ) {
@@ -717,12 +719,12 @@ private fun TravelDialog(
                     datePickerState.selectedDateMillis?.let { endDate = it }
                     showEndDatePicker = false
                 }) {
-                    Text("확인")
+                    Text(stringResource(R.string.confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showEndDatePicker = false }) {
-                    Text("취소")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         ) {
@@ -784,7 +786,7 @@ fun LanguageSettingSection() {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = stringResource(R.string.change_language), // strings.xml: @string/change_language
+                        text = stringResource(R.string.setting_language_box_text), // strings.xml: @string/change_language
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -830,7 +832,7 @@ private fun ExportTravelSelectDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("내보낼 여행 선택") },
+        title = { Text(stringResource(R.string.setting_exportdialog_title)) },
         text = {
             LazyColumn {
                 items(travels) { travel ->
@@ -871,7 +873,10 @@ private fun ExportTravelSelectDialog(
                             personsMap[travel.id]?.let { persons ->
                                 if (persons.isNotEmpty()) {
                                     Text(
-                                        text = "참가자: ${persons.joinToString(", ")}",
+                                        text = stringResource(
+                                            R.string.setting_exportdialog_people,
+                                            persons.joinToString(", ")
+                                        ),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -887,12 +892,12 @@ private fun ExportTravelSelectDialog(
                 onClick = { onConfirm(selectedTravelIds.toList()) },
                 enabled = selectedTravelIds.isNotEmpty()
             ) {
-                Text("내보내기")
+                Text(stringResource(R.string.setting_exportdialog_export))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("취소")
+                Text(stringResource(R.string.cancel))
             }
         }
     )
