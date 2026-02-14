@@ -104,4 +104,8 @@
     <string name="expense_usercard_title">사용 정보</string>
     <string name="expense_usercard_user">사용자</string>
     <string name="expense_usercard_amount">금액</string>
+    <string name="widget_total_expense">총 지출</string>
+    <string name="widget_today_expense">오늘 지출</string>
+    <string name="widget_average_expense">일평균 지출</string>
+    <string name="widget_remaining_cash">남은 현금</string>
 </resources>
