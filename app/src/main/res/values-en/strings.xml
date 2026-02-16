@@ -101,19 +101,21 @@
     <string name="expense_bill_image">Bill Image</string>
     <string name="expense_bill_image_camera">Camera</string>
     <string name="expense_bill_image_gallery">Gallery</string>
-    <string name="expense_memo">Memo (Optional)</string>
     <string name="expense_use_date">Expense Date</string>
     <string name="expense_datetimepicker_next">Next</string>
     <string name="expense_paymentcard_title">Pay info</string>
     <string name="expense_paymentcard_payer">Payer</string>
-    <string name="expense_paymentcard_amount">Amount</string>
     <string name="expense_paymentcard_payment_method">Payment Method</string>
     <string name="expense_usercard_title">Use info</string>
     <string name="expense_usercard_user">User</string>
-    <string name="expense_usercard_amount">Amount</string>
     <string name="widget_total_expense">Total Expense</string>
     <string name="widget_today_expense">Today Expense</string>
     <string name="widget_average_expense">Average Expense per Day</string>
     <string name="widget_remaining_cash">Remaining Cash</string>
     <string name="expense_camera_permisson_request">You have to allow camera permissions to use camera.</string>
+    <string name="personasset_cashadd_title">Add Cash</string>
+    <string name="personasset_cashadddelete_title">Cash Add Delete</string>
+    <string name="personasset_cashaddedit_title">Cash Add Edit</string>
+    <string name="amount">Amount</string>
+    <string name="memo">Memo (Optional)</string>
 </resources>

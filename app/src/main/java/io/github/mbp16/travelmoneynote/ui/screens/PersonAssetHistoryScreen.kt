@@ -1,14 +1,11 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -20,13 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
+import io.github.mbp16.travelmoneynote.R
 import io.github.mbp16.travelmoneynote.data.CashEntry
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -95,7 +92,7 @@ fun PersonAssetHistoryScreen(
     if (recordToRemove != null) {
         AlertDialog(
             onDismissRequest = { recordToRemove = null },
-            title = { Text("삭제 확인") },
+            title = { Text(stringResource(R.string.personasset_cashadddelete_title)) },
             text = { Text("${recordToRemove!!.description}\n${formatMoneyWithRate(recordToRemove!!.amount)}") },
             confirmButton = {
                 TextButton(
@@ -113,10 +110,10 @@ fun PersonAssetHistoryScreen(
                         }
                         recordToRemove = null
                     }
-                ) { Text("삭제", color = MaterialTheme.colorScheme.error) }
+                ) { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { recordToRemove = null }) { Text("취소") }
+                TextButton(onClick = { recordToRemove = null }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -130,13 +127,13 @@ fun PersonAssetHistoryScreen(
 
         AlertDialog(
             onDismissRequest = { recordToModify = null },
-            title = { Text("현금 추가 수정") },
+            title = { Text(stringResource(R.string.personasset_cashaddedit_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     OutlinedTextField(
                         value = amtInput,
                         onValueChange = { if (it.all { ch -> ch.isDigit() || ch == '.' }) amtInput = it },
-                        label = { Text("금액") },
+                        label = { Text(stringResource(R.string.amount)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
@@ -144,7 +141,7 @@ fun PersonAssetHistoryScreen(
                     OutlinedTextField(
                         value = descInput,
                         onValueChange = { descInput = it },
-                        label = { Text("내용") },
+                        label = { Text(stringResource(R.string.memo)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -167,10 +164,10 @@ fun PersonAssetHistoryScreen(
                             recordToModify = null
                         }
                     }
-                ) { Text("저장") }
+                ) { Text(stringResource(R.string.save)) }
             },
             dismissButton = {
-                TextButton(onClick = { recordToModify = null }) { Text("취소") }
+                TextButton(onClick = { recordToModify = null }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -187,12 +184,13 @@ fun PersonAssetHistoryScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
+            ExtendedFloatingActionButton(
                 onClick = { bottomSheetVisible = true },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "현금 추가")
+                Text(" " + stringResource(R.string.personasset_cashadd_title))
             }
         }
     ) { scaffoldPadding ->
@@ -209,18 +207,11 @@ fun PersonAssetHistoryScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primaryContainer,
-                                    MaterialTheme.colorScheme.secondaryContainer
-                                )
-                            )
-                        )
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
                         .dropShadow(
                             shape = RoundedCornerShape(16.dp),
                             shadow = Shadow(
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
                                 radius = 20.dp,
                                 spread = 2.dp,
                                 offset = DpOffset(0.dp, 10.dp)
@@ -232,13 +223,13 @@ fun PersonAssetHistoryScreen(
                         Text(
                             text = "총 ${moneyFlowRecords.value.size}건의 변동",
                             style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Column {
                             Text(
-                                text = "누적 입금",
+                                text = "누적 현금 추가",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                             )
                             Text(
                                 text = formatMoneyWithRate(
@@ -250,9 +241,9 @@ fun PersonAssetHistoryScreen(
                             }
                         Column {
                             Text(
-                                text = "누적 출금",
+                                text = "누적 결제",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                             )
                             Text(
                                 text = formatMoneyWithRate(
@@ -319,7 +310,7 @@ fun PersonAssetHistoryScreen(
                                 )
                             )
                             .clickable { 
-                                if (flowRec.type == "현금 추가") {
+                                if (flowRec.type == "cash" && flowRec.isPositive) {
                                     expandedCardIdx = if (isExpanded) null else idx
                                 }
                             }
@@ -366,7 +357,8 @@ fun PersonAssetHistoryScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = flowRec.type,
+                                    text = (if (flowRec.type == "cash") "💵 " + stringResource(R.string.cash) else "💳 " + stringResource(R.string.card))
+                                            + " " + (if (flowRec.isPositive) stringResource(R.string.add) else "결제"),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -383,7 +375,7 @@ fun PersonAssetHistoryScreen(
                         }
                         
                         AnimatedVisibility(
-                            visible = isExpanded && flowRec.type == "현금 추가",
+                            visible = isExpanded && flowRec.type == "cash" && flowRec.isPositive,
                             enter = expandVertically() + fadeIn(),
                             exit = shrinkVertically() + fadeOut()
                         ) {
@@ -392,7 +384,6 @@ fun PersonAssetHistoryScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 8.dp),
-                                horizontalArrangement = Arrangement.End
                             ) {
                                 TextButton(onClick = { recordToModify = flowRec }) {
                                     Text("수정")

@@ -1,27 +1,25 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.shadow.Shadow
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
-import io.github.mbp16.travelmoneynote.data.CashEntry
-import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -30,7 +28,7 @@ data class TransactionItem(
     val amount: Double,
     val isPositive: Boolean,
     val description: String,
-    val type: String,
+    val type: String, // "cash" or "card"
     val createdAt: Long
 )
 
@@ -270,6 +268,7 @@ fun PersonDetailScreen(
                                 offset = DpOffset(0.dp, 5.dp)
                             )
                         )
+                        .clickable { onNavigateToAssetHistory(personId) }
                 ) {
                     Row(
                         modifier = Modifier
@@ -319,15 +318,6 @@ fun PersonDetailScreen(
                                 }
                             }
                         }
-                        FilledTonalButton(
-                            onClick = { onNavigateToAssetHistory(personId) },
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("보기")
-                        }
                     }
                 }
             }
@@ -349,6 +339,7 @@ fun PersonDetailScreen(
                                 offset = DpOffset(0.dp, 5.dp)
                             )
                         )
+                        .clickable { onNavigateToUsageHistory(personId) }
                 ) {
                     Row(
                         modifier = Modifier
@@ -395,15 +386,6 @@ fun PersonDetailScreen(
                                     )
                                 }
                             }
-                        }
-                        FilledTonalButton(
-                            onClick = { onNavigateToUsageHistory(personId) },
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
-                            ),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("보기")
                         }
                     }
                 }

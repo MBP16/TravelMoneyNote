@@ -368,7 +368,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     amount = entry.amount,
                     isPositive = true,
                     description = entry.description,
-                    type = "현금 추가",
+                    type = "cash",
                     createdAt = entry.createdAt
                 )
             }
@@ -380,7 +380,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         amount = payment.amount,
                         isPositive = false,
                         description = expense.title,
-                        type = if (payment.method == PaymentMethod.CASH) "현금 결제" else "카드 결제",
+                        type = if (payment.method == PaymentMethod.CASH) "cash" else "card",
                         createdAt = expense.createdAt
                     )
                 }

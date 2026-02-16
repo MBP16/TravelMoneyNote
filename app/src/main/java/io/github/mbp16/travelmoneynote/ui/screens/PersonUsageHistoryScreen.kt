@@ -1,7 +1,5 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -12,17 +10,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import java.text.SimpleDateFormat
@@ -35,9 +33,9 @@ fun PersonUsageHistoryScreen(
     personId: Long,
     onNavigateBack: () -> Unit
 ) {
-    val personListFlow = viewModel.getPersonsWithBalance().collectAsState(initial = emptyList())
+    val personListFlow = remember(viewModel) { viewModel.getPersonsWithBalance() }.collectAsState(initial = emptyList())
     val currentPerson = personListFlow.value.find { it.person.id == personId }
-    val expenseHistory = viewModel.getUsageHistoryForPerson(personId).collectAsState(initial = emptyList())
+    val expenseHistory = remember(viewModel, personId) { viewModel.getUsageHistoryForPerson(personId) }.collectAsState(initial = emptyList())
     val travelCurrency by viewModel.currentCurrency.collectAsState()
     val standardCurrency by viewModel.standardCurrency.collectAsState()
     val exchangeRateData by viewModel.exchangeRates.collectAsState()
@@ -47,7 +45,7 @@ fun PersonUsageHistoryScreen(
     val isExchangeRateDisplayEnabled = travelCurrency != standardCurrency && exchangeRateData != null
     val dateDisplayStyle = remember { SimpleDateFormat("yy.MM.dd HH:mm", Locale.getDefault()) }
 
-    fun formatMoney(money: Double): String {
+    fun formatMoney(money: Double, lineChange: Boolean = false): String {
         val refinedMoney = if (money % 1.0 == 0.0) {
             money.toInt().toString()
         } else {
@@ -57,7 +55,8 @@ fun PersonUsageHistoryScreen(
         if (!isExchangeRateDisplayEnabled) return defaultText
         val exchangedMoney = viewModel.convertToStandardCurrency(money, travelCurrency)
         return if (exchangedMoney != null) {
-            "$defaultText (${String.format("%,.0f", exchangedMoney)}$standardCurrencyDisplay)"
+            if (lineChange) "$defaultText\n(${String.format("%,.0f", exchangedMoney)}$standardCurrencyDisplay)"
+            else "$defaultText (${String.format("%,.0f", exchangedMoney)}$standardCurrencyDisplay)"
         } else defaultText
     }
 
@@ -88,23 +87,7 @@ fun PersonUsageHistoryScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(20.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.8f),
-                                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
-                                )
-                            )
-                        )
-                        .dropShadow(
-                            shape = RoundedCornerShape(20.dp),
-                            shadow = Shadow(
-                                color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.25f),
-                                radius = 18.dp,
-                                spread = 3.dp,
-                                offset = DpOffset(0.dp, 8.dp)
-                            )
-                        )
+                        .background(MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f))
                         .padding(24.dp)
                 ) {
                     Row(
@@ -143,9 +126,10 @@ fun PersonUsageHistoryScreen(
                                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = formatMoney(totalMoney),
+                                text = formatMoney(totalMoney, true),
                                 style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                textAlign = TextAlign.End
                             )
                         }
                     }
@@ -161,13 +145,11 @@ fun PersonUsageHistoryScreen(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .dropShadow(
+                            .shadow(
+                                elevation = 4.dp,
                                 shape = RoundedCornerShape(16.dp),
-                                shadow = Shadow(
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
-                                    radius = 8.dp,
-                                    offset = DpOffset(0.dp, 4.dp)
-                                )
+                                spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
+                                ambientColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f)
                             )
                     ) {
                         Box(
@@ -194,7 +176,10 @@ fun PersonUsageHistoryScreen(
                     }
                 }
             } else {
-                items(expenseHistory.value) { expenseItem ->
+                items(
+                    items = expenseHistory.value,
+                    key = { it.expenseId }
+                ) { expenseItem ->
                     Card(
                         shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(
@@ -202,14 +187,11 @@ fun PersonUsageHistoryScreen(
                         ),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .dropShadow(
+                            .shadow(
+                                elevation = 6.dp,
                                 shape = RoundedCornerShape(18.dp),
-                                shadow = Shadow(
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                    radius = 14.dp,
-                                    spread = 2.dp,
-                                    offset = DpOffset(0.dp, 7.dp)
-                                )
+                                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                             )
                     ) {
                         Column(
@@ -221,7 +203,7 @@ fun PersonUsageHistoryScreen(
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(
                                     modifier = Modifier.weight(1f),

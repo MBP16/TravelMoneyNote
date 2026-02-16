@@ -560,7 +560,7 @@ fun ExpenseScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text(stringResource(R.string.expense_memo)) },
+                    label = { Text(stringResource(R.string.memo)) },
                     modifier = Modifier.fillMaxWidth().height(300.dp),
                     singleLine = false
                 )
@@ -796,7 +796,7 @@ fun PaymentEntryCard(
             OutlinedTextField(
                 value = payment.amount,
                 onValueChange = { onPaymentChange(payment.copy(amount = it.filter { c -> c.isDigit() || c == '.' })) },
-                label = { Text(stringResource(R.string.expense_paymentcard_amount)) },
+                label = { Text(stringResource(R.string.amount)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
@@ -920,7 +920,7 @@ fun ExpenseUserEntryCard(
             OutlinedTextField(
                 value = expenseUser.amount,
                 onValueChange = { onExpenseUserChange(expenseUser.copy(amount = it.filter { c -> c.isDigit() || c == '.' })) },
-                label = { Text(stringResource(R.string.expense_usercard_amount)) },
+                label = { Text(stringResource(R.string.amount)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
@@ -930,7 +930,7 @@ fun ExpenseUserEntryCard(
             OutlinedTextField(
                 value = expenseUser.description,
                 onValueChange = { onExpenseUserChange(expenseUser.copy(description = it)) },
-                label = { Text(stringResource(R.string.expense_memo)) },
+                label = { Text(stringResource(R.string.memo)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )

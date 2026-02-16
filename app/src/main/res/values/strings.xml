@@ -94,19 +94,21 @@
     <string name="expense_bill_image">영수증 사진</string>
     <string name="expense_bill_image_camera">카메라</string>
     <string name="expense_bill_image_gallery">갤러리</string>
-    <string name="expense_memo">메모 (선택)</string>
     <string name="expense_use_date">소비 일시</string>
     <string name="expense_datetimepicker_next">다음</string>
     <string name="expense_paymentcard_title">결제 정보</string>
     <string name="expense_paymentcard_payer">결제자</string>
-    <string name="expense_paymentcard_amount">금액</string>
     <string name="expense_paymentcard_payment_method">결제 수단</string>
     <string name="expense_usercard_title">사용 정보</string>
     <string name="expense_usercard_user">사용자</string>
-    <string name="expense_usercard_amount">금액</string>
     <string name="widget_total_expense">총 지출</string>
     <string name="widget_today_expense">오늘 지출</string>
     <string name="widget_average_expense">일평균 지출</string>
     <string name="widget_remaining_cash">남은 현금</string>
     <string name="expense_camera_permisson_request">카메라를 사용하려면 카메라 권한이 필요합니다.</string>
+    <string name="personasset_cashadd_title">현금 추가</string>
+    <string name="personasset_cashadddelete_title">현금 추가 삭제</string>
+    <string name="personasset_cashaddedit_title">현금 추가 수정</string>
+    <string name="amount">금액</string>
+    <string name="memo">메모 (선택)</string>
 </resources>
