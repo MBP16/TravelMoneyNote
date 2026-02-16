@@ -1,9 +1,7 @@
 package io.github.mbp16.travelmoneynote
 
-import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -92,18 +89,6 @@ class MainActivity : ComponentActivity() {
 fun TravelMoneyNoteApp() {
     val navController = rememberNavController()
     val viewModel: MainViewModel = viewModel()
-
-    // 카메라 권한 요청 로직 추가
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            // 권한 허용/거부 시 처리 로직을 여기에 작성할 수 있습니다.
-        }
-    )
-
-    LaunchedEffect(Unit) {
-        permissionLauncher.launch(Manifest.permission.CAMERA)
-    }
 
     NavHost(
         navController = navController,

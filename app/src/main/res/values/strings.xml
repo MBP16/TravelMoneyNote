@@ -108,4 +108,5 @@
     <string name="widget_today_expense">오늘 지출</string>
     <string name="widget_average_expense">일평균 지출</string>
     <string name="widget_remaining_cash">남은 현금</string>
+    <string name="expense_camera_permisson_request">카메라를 사용하려면 카메라 권한이 필요합니다.</string>
 </resources>
