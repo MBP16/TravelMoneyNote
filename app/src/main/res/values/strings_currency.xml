@@ -1,0 +1,33 @@
+<resources>
+    <string name="currency_krw">한국 원</string>
+    <string name="currency_usd">미국 달러</string>
+    <string name="currency_eur">유로</string>
+    <string name="currency_jpy">일본 엔</string>
+    <string name="currency_cny">중국 위안</string>
+    <string name="currency_gbp">영국 파운드</string>
+    <string name="currency_thb">태국 바트</string>
+    <string name="currency_vnd">베트남 동 (환율 서비스 사용 불가)</string>
+    <string name="currency_twd">대만 달러 (환율 서비스 사용 불가)</string>
+    <string name="currency_sgd">싱가포르 달러</string>
+    <string name="currency_aud">호주 달러</string>
+    <string name="currency_brl">브라질 레알</string>
+    <string name="currency_cad">캐나다 달러</string>
+    <string name="currency_chf">스위스 프랑</string>
+    <string name="currency_czk">체코 코루나</string>
+    <string name="currency_dkk">덴마크 크로네</string>
+    <string name="currency_hkd">홍콩 달러</string>
+    <string name="currency_huf">헝가리 포린트</string>
+    <string name="currency_idr">인도네시아 루피아</string>
+    <string name="currency_ils">이스라엘 신 셰켈</string>
+    <string name="currency_inr">인도 루피</string>
+    <string name="currency_isk">아이슬란드 크로나</string>
+    <string name="currency_mxn">멕시코 페소</string>
+    <string name="currency_myr">말레이시아 링깃</string>
+    <string name="currency_nok">노르웨이 크로네</string>
+    <string name="currency_nzd">뉴질랜드 달러</string>
+    <string name="currency_php">필리핀 페소</string>
+    <string name="currency_pln">폴란드 즈워티</string>
+    <string name="currency_ron">루마니아 레우</string>
+    <string name="currency_sek">스웨덴 크로나</string>
+    <string name="currency_zar">남아프리카 공화국 랜드</string>
+</resources>

@@ -1,0 +1,26 @@
+<resources>
+    <string name="home_select_trip">여행을 선택해주세요</string>
+    <string name="home_select_trip_detail">설정에서 여행을 추가하고 선택할 수 있습니다</string>
+    <string name="home_navigate_to_settings">설정으로 이동</string>
+    <string name="home_person_status">인원 현황</string>
+    <string name="home_add_person">사람 추가</string>
+    <string name="home_no_person">등록된 인원이 없습니다</string>
+    <string name="home_expense_list">소비 내역</string>
+    <string name="home_add_expense">소비 추가</string>
+    <string name="home_no_expense">소비 내역이 없습니다</string>
+    <string name="home_personcard_first_cash">보유 현금: %1$s</string>
+    <string name="home_personcard_used_cash">현금 사용: %1$s</string>
+    <string name="home_personcard_used_card">카드 사용: %1$s</string>
+    <string name="home_personcard_remaining_cash">남은 현금: %1$s</string>
+    <string name="home_personeditdialog_title">이름 수정</string>
+    <string name="home_personeditdialog_field_name">이름</string>
+    <string name="home_persondeletedialog_title">사람 삭제</string>
+    <string name="home_persondeletedialog_detail">정말로 %1$s님을 삭제하시겠습니까? 관련된 모든 기록이 삭제됩니다.</string>
+    <string name="home_expensecard_title_placeholder">소비</string>
+    <string name="home_expensecard_photo_text">📷 사진 %1$d장 첨부됨</string>
+    <string name="home_expensecard_photo_text_placeholder">📷 사진 첨부됨</string>
+    <string name="home_expensedeletedialog_title">소비 내역 삭제</string>
+    <string name="home_expensedeletedialog_detail">정말로 이 소비 내역을 삭제하시겠습니까?</string>
+    <string name="home_addpersonmodal_title">사람 추가</string>
+    <string name="home_addpersonmodal_name">이름</string>
+</resources>

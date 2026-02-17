@@ -33,29 +33,10 @@ import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.R
 import io.github.mbp16.travelmoneynote.data.Travel
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
-
-data class Currency(
-    val code: String,
-    val nameResId: Int,
-    val symbol: String
-)
-
-val availableCurrencies = listOf(
-    Currency("KRW", R.string.currency_krw, "₩"),
-    Currency("USD", R.string.currency_usd, "$"),
-    Currency("EUR", R.string.currency_eur, "€"),
-    Currency("JPY", R.string.currency_jpy, "¥"),
-    Currency("CNY", R.string.currency_cny, "¥"),
-    Currency("GBP", R.string.currency_gbp, "£"),
-    Currency("THB", R.string.currency_thb, "฿"),
-    Currency("VND", R.string.currency_vnd, "₫"),
-    Currency("TWD", R.string.currency_twd, "NT$"),
-    Currency("SGD", R.string.currency_sgd, "S$"),
-    Currency("AUD", R.string.currency_aud, "A$"),
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -744,7 +725,7 @@ fun LanguageSettingSection() {
 
     Column {
         Text(
-            text = stringResource(R.string.language_setting), // strings.xml: @string/settings_language
+            text = stringResource(R.string.setting_language_setting), // strings.xml: @string/settings_language
             style = MaterialTheme.typography.titleMedium
         )
         

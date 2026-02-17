@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
     ) { result -> helper.onActivityResult(result.resultCode) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         helper = InAppUpdateHelper(
@@ -47,7 +48,6 @@ class MainActivity : ComponentActivity() {
         )
         helper.check()
 
-        enableEdgeToEdge()
         setContent {
             TravelMoneyNoteTheme {
                 Surface(

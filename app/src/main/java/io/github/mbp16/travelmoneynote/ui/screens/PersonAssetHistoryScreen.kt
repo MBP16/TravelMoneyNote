@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.R
 import io.github.mbp16.travelmoneynote.data.CashEntry
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -175,7 +176,7 @@ fun PersonAssetHistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("${foundPersonData?.person?.name ?: "알수없음"}의 자산 변동") },
+                title = { Text(stringResource(R.string.personasset_title, foundPersonData?.person?.name ?: "Unknown")) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
@@ -221,13 +222,13 @@ fun PersonAssetHistoryScreen(
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            text = "총 ${moneyFlowRecords.value.size}건의 변동",
+                            text = stringResource(R.string.personasset_summary_count, moneyFlowRecords.value.size),
                             style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Column {
                             Text(
-                                text = "누적 현금 추가",
+                                text = stringResource(R.string.personasset_total_cash_add),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                             )
@@ -241,7 +242,7 @@ fun PersonAssetHistoryScreen(
                             }
                         Column {
                             Text(
-                                text = "누적 결제",
+                                text = stringResource(R.string.personasset_total_pay),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                             )
@@ -279,7 +280,7 @@ fun PersonAssetHistoryScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "아직 자산 변동이 없습니다\n우측 하단 버튼으로 현금을 추가하세요",
+                                text = stringResource(R.string.personasset_placeholder),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -358,7 +359,9 @@ fun PersonAssetHistoryScreen(
                                 )
                                 Text(
                                     text = (if (flowRec.type == "cash") "💵 " + stringResource(R.string.cash) else "💳 " + stringResource(R.string.card))
-                                            + " " + (if (flowRec.isPositive) stringResource(R.string.add) else "결제"),
+                                            + " " + (if (flowRec.isPositive) stringResource(R.string.add) else stringResource(
+                                        R.string.personasset_pay
+                                    )),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                 )
@@ -386,10 +389,10 @@ fun PersonAssetHistoryScreen(
                                     .padding(horizontal = 8.dp),
                             ) {
                                 TextButton(onClick = { recordToModify = flowRec }) {
-                                    Text("수정")
+                                    Text(stringResource(R.string.edit))
                                 }
                                 TextButton(onClick = { recordToRemove = flowRec }) {
-                                    Text("삭제", color = MaterialTheme.colorScheme.error)
+                                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
                                 }
                             }
                         }

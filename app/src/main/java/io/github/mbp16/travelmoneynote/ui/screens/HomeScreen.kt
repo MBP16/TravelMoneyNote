@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.PersonWithBalance
 import io.github.mbp16.travelmoneynote.R
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.*

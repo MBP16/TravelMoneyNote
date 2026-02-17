@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.R
 import io.github.mbp16.travelmoneynote.data.Person
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

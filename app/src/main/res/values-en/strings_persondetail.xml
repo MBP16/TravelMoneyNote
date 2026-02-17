@@ -1,0 +1,34 @@
+<resources>
+    <string name="persondetail_asset_status">Asset Summary</string>
+    <string name="persondetail_total_cash">Total Cash</string>
+    <string name="persondetail_cash_use">Cash Use</string>
+    <string name="persondetail_card_use">Card Use</string>
+    <string name="persondetail_remaining_cash">Remaining Cash</string>
+    <string name="persondetail_exchange_info">Exchange Info</string>
+    <string name="persondetail_exchange_get_title">Need to Get</string>
+    <string name="persondetail_exchange_get">From %1$s</string>
+    <string name="persondetail_exchange_give_title">Need to Give</string>
+    <string name="persondetail_exchange_give">To %1$s</string>
+    <string name="persondetail_activity_summary">Activity Summary</string>
+    <string name="persondetail_asset_history">Asset History</string>
+    <string name="persondetail_asset_history_content">%1$d Activities • %2$s</string>
+    <string name="persondetail_spend_history">Spend History</string>
+    <string name="persondetail_asset_history_placeholder">No Activity</string>
+    <string name="persondetail_spend_history_placeholder">No Activity</string>
+    <string name="persondetail_spend_history_content">%1$d Activities • Total %2$s</string>
+    <string name="personasset_cashadd_title">Add Cash</string>
+    <string name="personasset_cashadddelete_title">Cash Add Delete</string>
+    <string name="personasset_cashaddedit_title">Cash Add Edit</string>
+    <string name="personasset_title">Asset History of %1$s</string>
+    <string name="personasset_summary_count">Total %1$s Changes</string>
+    <string name="personasset_total_cash_add">Total Cash Add</string>
+    <string name="personasset_total_pay">Total Pay</string>
+    <string name="personasset_placeholder">"There is no asset change yet. Add cash by clicking the button below or add expense at home screen."</string>
+    <string name="personasset_pay">Pay</string>
+    <string name="personspend_title">Spend History of %1$s</string>
+    <string name="personspend_total_spend">Total Sepnd History</string>
+    <string name="personspend_total_count">%1$d Histories</string>
+    <string name="personspend_total">Sum</string>
+    <string name="personspend_placeholder">There is no expense yet</string>
+    <string name="personspend_payer">Payer</string>
+</resources>

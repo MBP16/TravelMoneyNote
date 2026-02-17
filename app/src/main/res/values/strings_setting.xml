@@ -1,0 +1,35 @@
+<resources>
+    <string name="settings">설정</string>
+    <string name="setting_export_complete">내보내기 완료</string>
+    <string name="setting_export_failure">내보내기 실패</string>
+    <string name="setting_cannot_read_file">파일을 읽을 수 없습니다</string>
+    <string name="setting_manage_trip">여행 관리</string>
+    <string name="setting_no_trip_added">등록된 여행이 없습니다</string>
+    <string name="setting_standard_currency_title">기준 화페 설정</string>
+    <string name="setting_standard_currency_field_title">기준 화폐</string>
+    <string name="setting_data_manage_title">데이터 관리</string>
+    <string name="setting_export_to_file">파일로 내보내기</string>
+    <string name="setting_export_to_file_detail">모든 데이터와 영수증 사진을 ZIP 파일로 저장합니다</string>
+    <string name="setting_import_from_file">파일에서 불러오기</string>
+    <string name="setting_import_from_file_detail">ZIP 또는 JSON 파일에서 데이터를 복원합니다</string>
+    <string name="setting_reset_database">데이터베이스 초기화</string>
+    <string name="setting_reset_database_detail">모든 데이터가 삭제됩니다</string>
+    <string name="setting_tripdialog_title_add">여행 추가</string>
+    <string name="setting_tripdialog_title_edit">여행 수정</string>
+    <string name="setting_tripdeletedialog_title">여행 삭제</string>
+    <string name="setting_tripdeletedialog_detail">\'%1$s\' 여행을 삭제하시겠습니까?</string>
+    <string name="setting_reset_database_dialog_detail">정말로 모든 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.</string>
+    <string name="setting_importdialog_title">데이터 불러오기</string>
+    <string name="setting_importdialog_detail">다음 여행들을 추가합니다:</string>
+    <string name="setting_importdialog_people">사람들: %1$s</string>
+    <string name="setting_importdialog_import">불러오기</string>
+    <string name="setting_tripdialog_trip_title">여행 이름</string>
+    <string name="setting_tripdialog_start_date">시작일</string>
+    <string name="setting_tripdialog_end_date">종료일</string>
+    <string name="setting_tripdialog_currency">화폐</string>
+    <string name="setting_exportdialog_title">내보낼 여행 선택</string>
+    <string name="setting_exportdialog_people">사람들: %1$s</string>
+    <string name="setting_exportdialog_export">내보내기</string>
+    <string name="setting_language_box_text">언어 변경</string>
+    <string name="setting_language_setting">언어 설정</string>
+</resources>

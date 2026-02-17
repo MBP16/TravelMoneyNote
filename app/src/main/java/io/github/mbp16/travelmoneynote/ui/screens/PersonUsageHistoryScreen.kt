@@ -19,10 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
+import io.github.mbp16.travelmoneynote.R
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -65,7 +68,7 @@ fun PersonUsageHistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("${currentPerson?.person?.name ?: "알수없음"}의 소비 내역") },
+                title = { Text(stringResource(R.string.personspend_title, currentPerson?.person?.name ?: "Unknown")) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
@@ -108,20 +111,20 @@ fun PersonUsageHistoryScreen(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    text = "전체 소비 내역",
+                                    text = stringResource(R.string.personspend_total_spend),
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.onTertiaryContainer
                                 )
                             }
                             Text(
-                                text = "${expenseHistory.value.size}건의 사용 기록",
+                                text = stringResource(R.string.personspend_total_count, expenseHistory.value.size),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                text = "합계",
+                                text = stringResource(R.string.personspend_total),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                             )
@@ -167,7 +170,7 @@ fun PersonUsageHistoryScreen(
                                     style = MaterialTheme.typography.displaySmall
                                 )
                                 Text(
-                                    text = "아직 소비 내역이 없습니다",
+                                    text = stringResource(R.string.personspend_placeholder),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -254,7 +257,7 @@ fun PersonUsageHistoryScreen(
                             ) {
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Text(
-                                        text = "결제자",
+                                        text = stringResource(R.string.personspend_payer),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                                     )

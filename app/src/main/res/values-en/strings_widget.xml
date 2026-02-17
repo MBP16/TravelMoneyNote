@@ -1,0 +1,7 @@
+<resources>
+    <string name="widget_description">Check current expenses and remaining assets</string>
+    <string name="widget_total_expense">Total Expense</string>
+    <string name="widget_today_expense">Today Expense</string>
+    <string name="widget_average_expense">Average Expense per Day</string>
+    <string name="widget_remaining_cash">Remaining Cash</string>
+</resources>

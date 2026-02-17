@@ -17,9 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
+import io.github.mbp16.travelmoneynote.R
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -77,7 +80,7 @@ fun PersonDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(personWithBalance?.person?.name ?: "상세 정보") },
+                title = { Text(personWithBalance?.person?.name ?: "") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로")
@@ -113,7 +116,7 @@ fun PersonDetailScreen(
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Text(
-                                text = "잔액 현황",
+                                text = stringResource(R.string.persondetail_asset_status),
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -121,14 +124,14 @@ fun PersonDetailScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("보유 현금")
+                                Text(stringResource(R.string.persondetail_total_cash))
                                 Text(formatWithConversion(pwb.totalCash))
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("현금 사용")
+                                Text(stringResource(R.string.persondetail_cash_use))
                                 Text(
                                     "-${formatWithConversion(pwb.cashSpent)}",
                                     color = MaterialTheme.colorScheme.error
@@ -138,7 +141,7 @@ fun PersonDetailScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("카드 사용")
+                                Text(stringResource(R.string.persondetail_card_use))
                                 Text(
                                     "-${formatWithConversion(pwb.cardSpent)}",
                                     color = MaterialTheme.colorScheme.error
@@ -150,7 +153,7 @@ fun PersonDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    "남은 현금",
+                                    stringResource(R.string.persondetail_remaining_cash),
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
@@ -172,7 +175,7 @@ fun PersonDetailScreen(
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "정산 정보",
+                        text = stringResource(R.string.persondetail_exchange_info),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -197,7 +200,7 @@ fun PersonDetailScreen(
                         ) {
                             if (toReceive.isNotEmpty()) {
                                 Text(
-                                    text = "받을 금액",
+                                    text = stringResource(R.string.persondetail_exchange_get_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -206,7 +209,11 @@ fun PersonDetailScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("${settlement.fromPersonName}에게서")
+                                        Text(
+                                            stringResource(
+                                                R.string.persondetail_exchange_get,
+                                                settlement.fromPersonName
+                                            ))
                                         Text(
                                             "+${formatWithConversion(settlement.amount)}",
                                             color = MaterialTheme.colorScheme.primary
@@ -221,7 +228,7 @@ fun PersonDetailScreen(
 
                             if (toPay.isNotEmpty()) {
                                 Text(
-                                    text = "갚아야 할 금액",
+                                    text = stringResource(R.string.persondetail_exchange_give_title),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.error
                                 )
@@ -230,7 +237,11 @@ fun PersonDetailScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("${settlement.toPersonName}에게")
+                                        Text(
+                                            stringResource(
+                                                R.string.persondetail_exchange_give,
+                                                settlement.toPersonName
+                                            ))
                                         Text(
                                             "-${formatWithConversion(settlement.amount)}",
                                             color = MaterialTheme.colorScheme.error
@@ -246,7 +257,7 @@ fun PersonDetailScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "활동 요약",
+                    text = stringResource(R.string.persondetail_activity_summary),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -296,22 +307,23 @@ fun PersonDetailScreen(
                             Spacer(modifier = Modifier.width(14.dp))
                             Column {
                                 Text(
-                                    text = "자산 변동",
+                                    text = stringResource(R.string.persondetail_asset_history),
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 if (transactions.isEmpty()) {
                                     Text(
-                                        text = "아직 변동 없음",
+                                        text = stringResource(R.string.persondetail_asset_history_placeholder),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                                     )
                                 } else {
                                     val lastTransaction = transactions.firstOrNull()
                                     Text(
-                                        text = "${transactions.size}건 • ${
-                                            lastTransaction?.let { dateFormat.format(Date(it.createdAt)) } ?: ""
-                                        }",
+                                        text = stringResource(
+                                            R.string.persondetail_asset_history_content,
+                                            transactions.size,
+                                            lastTransaction?.let { dateFormat.format(Date(it.createdAt)) } ?: ""),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
                                     )
@@ -367,20 +379,24 @@ fun PersonDetailScreen(
                             Spacer(modifier = Modifier.width(14.dp))
                             Column {
                                 Text(
-                                    text = "소비 내역",
+                                    text = stringResource(R.string.persondetail_spend_history),
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 if (usageHistory.isEmpty()) {
                                     Text(
-                                        text = "아직 사용 없음",
+                                        text = stringResource(R.string.persondetail_spend_history_placeholder),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                                     )
                                 } else {
                                     val totalUsage = usageHistory.sumOf { it.amount }
                                     Text(
-                                        text = "${usageHistory.size}건 • 총 ${formatWithConversion(totalUsage)}",
+                                        text = stringResource(
+                                            R.string.persondetail_spend_history_content,
+                                            usageHistory.size,
+                                            formatWithConversion(totalUsage)
+                                        ),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                                     )

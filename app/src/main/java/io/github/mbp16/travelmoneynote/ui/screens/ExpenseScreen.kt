@@ -39,6 +39,7 @@ import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.R
 import io.github.mbp16.travelmoneynote.data.PaymentMethod
 import io.github.mbp16.travelmoneynote.data.Person
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 import io.github.mbp16.travelmoneynote.ui.components.ImageViewerDialog
 import java.io.File
 import java.text.SimpleDateFormat

@@ -1,0 +1,34 @@
+<resources>
+    <string name="persondetail_asset_status">자산 요약</string>
+    <string name="persondetail_total_cash">보유 현금</string>
+    <string name="persondetail_cash_use">현금 사용</string>
+    <string name="persondetail_card_use">카드 사용</string>
+    <string name="persondetail_remaining_cash">남은 현금</string>
+    <string name="persondetail_exchange_info">정산 정보</string>
+    <string name="persondetail_exchange_get_title">받을 금액</string>
+    <string name="persondetail_exchange_get">%1$s에게서</string>
+    <string name="persondetail_exchange_give_title">갚아야 할 금액</string>
+    <string name="persondetail_exchange_give">%1$s에게</string>
+    <string name="persondetail_activity_summary">활동 요약</string>
+    <string name="persondetail_asset_history">자산 변동</string>
+    <string name="persondetail_asset_history_placeholder">아직 변동 없음</string>
+    <string name="persondetail_asset_history_content">%1$d건 • %2$s</string>
+    <string name="persondetail_spend_history">소비 내역</string>
+    <string name="persondetail_spend_history_placeholder">아직 사용 없음</string>
+    <string name="persondetail_spend_history_content">%1$d건 • 총 %2$s</string>
+    <string name="personasset_cashadd_title">현금 추가</string>
+    <string name="personasset_cashadddelete_title">현금 추가 삭제</string>
+    <string name="personasset_cashaddedit_title">현금 추가 수정</string>
+    <string name="personasset_title">%1$s의 자산 변동</string>
+    <string name="personasset_summary_count">총 %1$d건의 변동</string>
+    <string name="personasset_total_cash_add">누적 현금 추가</string>
+    <string name="personasset_total_pay">누적 결제</string>
+    <string name="personasset_placeholder">아직 자산 변동이 없습니다. 우측 하단 버튼으로 현금을 추가하거나 홈화면에서 소비를 추가하세요.</string>
+    <string name="personasset_pay">결제</string>
+    <string name="personspend_title">%1$s의 소비 내역</string>
+    <string name="personspend_total_spend">전체 소비 내역</string>
+    <string name="personspend_total_count">%1$d건의 사용 기록</string>
+    <string name="personspend_total">합계</string>
+    <string name="personspend_placeholder">아직 소비 내역이 없습니다</string>
+    <string name="personspend_payer">결제자</string>
+</resources>
