@@ -1,6 +1,9 @@
 package io.github.mbp16.travelmoneynote.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -30,11 +33,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import coil.compose.rememberAsyncImagePainter
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.R
 import io.github.mbp16.travelmoneynote.data.PaymentMethod
 import io.github.mbp16.travelmoneynote.data.Person
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 import io.github.mbp16.travelmoneynote.ui.components.ImageViewerDialog
 import java.io.File
 import java.text.SimpleDateFormat
@@ -137,15 +142,7 @@ fun ExpenseScreen(
             photoUris = photoUris + Uri.fromFile(imageFile)
         }
     }
-    
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success && tempPhotoUri != null) {
-            photoUris = photoUris + tempPhotoUri!!
-        }
-    }
-    
+
     fun createImageFile(): Uri {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val imageFile = File(context.filesDir, "IMG_$timeStamp.jpg")
@@ -155,6 +152,31 @@ fun ExpenseScreen(
             imageFile
         )
     }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && tempPhotoUri != null) {
+            photoUris = photoUris + tempPhotoUri!!
+        }
+    }
+
+    val launchCamera = {
+        tempPhotoUri = createImageFile()
+        cameraLauncher.launch(tempPhotoUri!!)
+    }
+
+    // 카메라 권한 요청
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                launchCamera()
+            } else {
+                Toast.makeText(context, context.getString(R.string.expense_camera_permisson_request), Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
     
     val totalAmount = payments.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
     val totalUserAmount = expenseUsers.sumOf { it.amount.toDoubleOrNull() ?: 0.0 }
@@ -470,8 +492,11 @@ fun ExpenseScreen(
                 ) {
                     OutlinedButton(
                         onClick = {
-                            tempPhotoUri = createImageFile()
-                            cameraLauncher.launch(tempPhotoUri!!)
+                            if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                                launchCamera()
+                            } else {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            }
                         },
                         modifier = Modifier.weight(1f)
                     ) {
@@ -536,7 +561,7 @@ fun ExpenseScreen(
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text(stringResource(R.string.expense_memo)) },
+                    label = { Text(stringResource(R.string.memo)) },
                     modifier = Modifier.fillMaxWidth().height(300.dp),
                     singleLine = false
                 )
@@ -772,7 +797,7 @@ fun PaymentEntryCard(
             OutlinedTextField(
                 value = payment.amount,
                 onValueChange = { onPaymentChange(payment.copy(amount = it.filter { c -> c.isDigit() || c == '.' })) },
-                label = { Text(stringResource(R.string.expense_paymentcard_amount)) },
+                label = { Text(stringResource(R.string.amount)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
@@ -896,7 +921,7 @@ fun ExpenseUserEntryCard(
             OutlinedTextField(
                 value = expenseUser.amount,
                 onValueChange = { onExpenseUserChange(expenseUser.copy(amount = it.filter { c -> c.isDigit() || c == '.' })) },
-                label = { Text(stringResource(R.string.expense_usercard_amount)) },
+                label = { Text(stringResource(R.string.amount)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 singleLine = true,
@@ -906,7 +931,7 @@ fun ExpenseUserEntryCard(
             OutlinedTextField(
                 value = expenseUser.description,
                 onValueChange = { onExpenseUserChange(expenseUser.copy(description = it)) },
-                label = { Text(stringResource(R.string.expense_memo)) },
+                label = { Text(stringResource(R.string.memo)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )

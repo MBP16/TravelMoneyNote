@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
 import io.github.mbp16.travelmoneynote.PersonWithBalance
 import io.github.mbp16.travelmoneynote.R
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.*
@@ -59,7 +60,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     val groupedExpenses = remember(expenses) {
-        expenses.groupBy { formatDate(it.createdAt, currentLocale) }
+        expenses.groupBy { formatDate(it.createdAt) }
     }
     
     Scaffold(
@@ -507,7 +508,7 @@ fun ExpenseCard(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = formatTime(expense.createdAt, locale),
+                            text = formatTime(expense.createdAt),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -574,12 +575,12 @@ fun ExpenseCard(
     }
 }
 
-private fun formatDate(timestamp: Long, locale: Locale): String {
-    val dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, locale)
+private fun formatDate(timestamp: Long): String {
+    val dateFormat = DateFormat.getDateInstance(DateFormat.DEFAULT, Locale.getDefault())
     return dateFormat.format(Date(timestamp))
 }
 
-private fun formatTime(timestamp: Long, locale: Locale): String {
-    val timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, locale)
+private fun formatTime(timestamp: Long): String {
+    val timeFormat = DateFormat.getTimeInstance(DateFormat.SHORT, Locale.getDefault())
     return timeFormat.format(Date(timestamp))
 }

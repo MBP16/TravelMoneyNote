@@ -1,0 +1,25 @@
+<resources>
+    <string name="expense_title_add">소비 추가</string>
+    <string name="expense_title_edit">소비 수정</string>
+    <string name="expense_title">제목</string>
+    <string name="expense_total_amount">총 금액: %1$s%2$s</string>
+    <string name="expense_pay_history">결제 내역</string>
+    <string name="expense_no_people_warning">먼저 사람을 추가해주세요</string>
+    <string name="expense_payer_add">결제자 추가</string>
+    <string name="expense_user">사용자</string>
+    <string name="expense_user_payer_same">결제내역 그대로</string>
+    <string name="expense_user_divide_by_n">1/n 정산</string>
+    <string name="expense_user_add">사용자 추가</string>
+    <string name="expense_payer_user_different_warning">⚠️ 결제 금액(%1$s%2$s)과 사용자 합계(%3$s%4$s)가 다릅니다</string>
+    <string name="expense_bill_image">영수증 사진</string>
+    <string name="expense_bill_image_camera">카메라</string>
+    <string name="expense_bill_image_gallery">갤러리</string>
+    <string name="expense_use_date">소비 일시</string>
+    <string name="expense_datetimepicker_next">다음</string>
+    <string name="expense_paymentcard_title">결제 정보</string>
+    <string name="expense_paymentcard_payer">결제자</string>
+    <string name="expense_paymentcard_payment_method">결제 수단</string>
+    <string name="expense_usercard_title">사용 정보</string>
+    <string name="expense_usercard_user">사용자</string>
+    <string name="expense_camera_permisson_request">카메라를 사용하려면 카메라 권한이 필요합니다.</string>
+</resources>

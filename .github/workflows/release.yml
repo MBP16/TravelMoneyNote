@@ -56,13 +56,11 @@ jobs:
           tag: ${{ github.ref }}
           asset_name: TravelMoneyNote_$tag.apk
 
-      - name: Upload to Release AAB
-        uses: svenstaro/upload-release-action@v2
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: app/build/outputs/bundle/release/app-release.aab
-          tag: ${{ github.ref }}
-          asset_name: TravelMoneyNote_$tag.aab
+          name: TravelMoneyNote_Release_AAB
+          path: app/build/outputs/bundle/release
           
       # 구글 플레이는 파일명으로 언어를 구분합니다 (예: whatsnew-ko-KR)
       - name: Create What is New file from Release Notes

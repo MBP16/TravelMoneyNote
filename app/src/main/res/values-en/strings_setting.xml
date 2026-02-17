@@ -1,0 +1,37 @@
+<resources>
+    <string name="settings">Settings</string>
+    <string name="setting_export_complete">Export completed</string>
+    <string name="setting_export_failure">Export failed</string>
+    <string name="setting_cannot_read_file">Cannot read the file</string>
+    <string name="setting_manage_trip">Manage Trip</string>
+    <string name="setting_no_trip_added">No trip added</string>
+    <string name="setting_standard_currency_title">Standard Currency Setting</string>
+    <string name="setting_standard_currency_field_title">Standard Currency</string>
+    <string name="setting_data_manage_title">Data Manage</string>
+    <string name="setting_export_to_file">Export to File</string>
+    <string name="setting_export_to_file_detail">Save every data and images to zip file</string>
+    <string name="setting_import_from_file">Import from File</string>
+    <string name="setting_import_from_file_detail">Restore data from zip file</string>
+    <string name="setting_reset_database">Reset Database</string>
+    <string name="setting_reset_database_detail">All data will be deleted</string>
+    <string name="setting_tripdialog_title_add">Add Trip</string>
+    <string name="setting_tripdialog_title_edit">Edit Trip</string>
+    <string name="setting_tripdeletedialog_title">Delete Trip</string>
+    <string name="setting_tripdeletedialog_detail">Are you sure to delete \'%1$s\'?</string>
+    <string name="setting_reset_database_dialog_detail">Are you sure to delete all the datas? This progress is
+        irreversible.
+    </string>
+    <string name="setting_importdialog_title">Import Data</string>
+    <string name="setting_importdialog_detail">Adding following trips:</string>
+    <string name="setting_importdialog_people">People: %1$s</string>
+    <string name="setting_importdialog_import">Import</string>
+    <string name="setting_tripdialog_currency">Currency</string>
+    <string name="setting_tripdialog_trip_title">Trip name</string>
+    <string name="setting_tripdialog_start_date">Start Date</string>
+    <string name="setting_tripdialog_end_date">End Date</string>
+    <string name="setting_exportdialog_people">People: %1$s</string>
+    <string name="setting_exportdialog_export">Export</string>
+    <string name="setting_exportdialog_title">Select trip to export</string>
+    <string name="setting_language_box_text">Language</string>
+    <string name="setting_language_setting">Language Setting</string>
+</resources>

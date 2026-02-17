@@ -43,6 +43,15 @@ data class ExpenseUserWithPerson(
     val personName: String
 )
 
+data class UsageItem(
+    val expenseId: Long,
+    val title: String,
+    val amount: Double,
+    val description: String,
+    val payerNames: List<String>,
+    val createdAt: Long
+)
+
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
     private val travelDao = database.travelDao()
@@ -359,7 +368,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     amount = entry.amount,
                     isPositive = true,
                     description = entry.description,
-                    type = "현금 추가",
+                    type = "cash",
                     createdAt = entry.createdAt
                 )
             }
@@ -371,12 +380,41 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         amount = payment.amount,
                         isPositive = false,
                         description = expense.title,
-                        type = if (payment.method == PaymentMethod.CASH) "현금 결제" else "카드 결제",
+                        type = if (payment.method == PaymentMethod.CASH) "cash" else "card",
                         createdAt = expense.createdAt
                     )
                 }
             }
             (cashTransactions + paymentTransactions).sortedByDescending { it.createdAt }
+        }
+    }
+
+    fun getUsageHistoryForPerson(personId: Long): Flow<List<UsageItem>> {
+        return combine(
+            expenseUserDao.getExpenseUsersForPerson(personId),
+            expenseDao.getAllExpenses(),
+            paymentDao.getAllPayments(),
+            persons
+        ) { useList, expenseList, payList, personList ->
+            val personMap = personList.associateBy { it.id }
+            val expenseMap = expenseList.associateBy { it.id }
+            
+            useList.mapNotNull { useItem ->
+                expenseMap[useItem.expenseId]?.let { expense ->
+                    val payers = payList
+                        .filter { it.expenseId == expense.id }
+                        .mapNotNull { pay -> personMap[pay.personId]?.name }
+                    
+                    UsageItem(
+                        expenseId = expense.id,
+                        title = expense.title,
+                        amount = useItem.amount,
+                        description = useItem.description,
+                        payerNames = payers,
+                        createdAt = expense.createdAt
+                    )
+                }
+            }.sortedByDescending { it.createdAt }
         }
     }
 

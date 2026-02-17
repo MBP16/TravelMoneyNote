@@ -1,9 +1,7 @@
 package io.github.mbp16.travelmoneynote
 
-import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -39,6 +36,7 @@ class MainActivity : ComponentActivity() {
     ) { result -> helper.onActivityResult(result.resultCode) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         helper = InAppUpdateHelper(
@@ -50,7 +48,6 @@ class MainActivity : ComponentActivity() {
         )
         helper.check()
 
-        enableEdgeToEdge()
         setContent {
             TravelMoneyNoteTheme {
                 Surface(
@@ -93,18 +90,6 @@ fun TravelMoneyNoteApp() {
     val navController = rememberNavController()
     val viewModel: MainViewModel = viewModel()
 
-    // 카메라 권한 요청 로직 추가
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            // 권한 허용/거부 시 처리 로직을 여기에 작성할 수 있습니다.
-        }
-    )
-
-    LaunchedEffect(Unit) {
-        permissionLauncher.launch(Manifest.permission.CAMERA)
-    }
-
     NavHost(
         navController = navController,
         startDestination = "home",
@@ -135,7 +120,7 @@ fun TravelMoneyNoteApp() {
     ) {
         composable("home") {
             HomeScreen(
-                viewModel = viewModel,
+                viewModel = viewModel,                 
                 onNavigateToAddExpense = { navController.navigate("add_expense") },
                 onNavigateToSettings = { navController.navigate("settings") },
                 onNavigateToPersonDetail = { personId -> navController.navigate("person_detail/$personId") },
@@ -145,7 +130,7 @@ fun TravelMoneyNoteApp() {
         composable("add_expense") {
             ExpenseScreen(
                 viewModel = viewModel,
-                onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() }
             )
         }
         composable("settings") {
@@ -157,6 +142,24 @@ fun TravelMoneyNoteApp() {
         composable("person_detail/{personId}") { backStackEntry ->
             val personId = backStackEntry.arguments?.getString("personId")?.toLongOrNull() ?: 0L
             PersonDetailScreen(
+                viewModel = viewModel,
+                personId = personId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAssetHistory = { navController.navigate("person_asset_history/$it") },
+                onNavigateToUsageHistory = { navController.navigate("person_usage_history/$it") }
+            )
+        }
+        composable("person_asset_history/{personId}") { backStackEntry ->
+            val personId = backStackEntry.arguments?.getString("personId")?.toLongOrNull() ?: 0L
+            io.github.mbp16.travelmoneynote.ui.screens.PersonAssetHistoryScreen(
+                viewModel = viewModel,
+                personId = personId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("person_usage_history/{personId}") { backStackEntry ->
+            val personId = backStackEntry.arguments?.getString("personId")?.toLongOrNull() ?: 0L
+            io.github.mbp16.travelmoneynote.ui.screens.PersonUsageHistoryScreen(
                 viewModel = viewModel,
                 personId = personId,
                 onNavigateBack = { navController.popBackStack() }

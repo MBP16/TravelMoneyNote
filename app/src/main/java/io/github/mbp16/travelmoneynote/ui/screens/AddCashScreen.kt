@@ -5,10 +5,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import io.github.mbp16.travelmoneynote.MainViewModel
+import io.github.mbp16.travelmoneynote.R
 import io.github.mbp16.travelmoneynote.data.Person
+import io.github.mbp16.travelmoneynote.data.availableCurrencies
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,14 +33,14 @@ fun AddCashScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "현금 추가",
+            text = stringResource(R.string.personasset_cashadd_title),
             style = MaterialTheme.typography.titleLarge
         )
 
         OutlinedTextField(
             value = amount,
             onValueChange = { amount = it.filter { c -> c.isDigit() || c == '.' } },
-            label = { Text("금액") },
+            label = { Text(stringResource(R.string.amount)) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
@@ -47,7 +50,7 @@ fun AddCashScreen(
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
-            label = { Text("설명 (선택)") },
+            label = { Text(stringResource(R.string.memo)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -67,7 +70,7 @@ fun AddCashScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = amount.toDoubleOrNull()?.let { it > 0 } == true
         ) {
-            Text("추가")
+            Text(stringResource(R.string.add))
         }
         Spacer(modifier = Modifier.height(16.dp))
     }

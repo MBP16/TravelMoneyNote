@@ -1,0 +1,33 @@
+<resources>
+    <string name="currency_krw">Korean Won</string>
+    <string name="currency_usd">US Dollar</string>
+    <string name="currency_eur">Euro</string>
+    <string name="currency_jpy">Japanese Yen</string>
+    <string name="currency_cny">China Wuian</string>
+    <string name="currency_gbp">British Pound</string>
+    <string name="currency_thb">Thailand Batt</string>
+    <string name="currency_vnd">Vietnamese Dong (Exchange Rate Not Supported)</string>
+    <string name="currency_twd">Taiwan Dollar (Exchange Rate Not Supported)</string>
+    <string name="currency_sgd">Singapor Dollar</string>
+    <string name="currency_aud">Austrailian Dollar</string>
+    <string name="currency_brl">Brazilian Real</string>
+    <string name="currency_cad">Canadian Dollar</string>
+    <string name="currency_chf">Swiss Franc</string>
+    <string name="currency_czk">Czech Koruna</string>
+    <string name="currency_dkk">Danish Krone</string>
+    <string name="currency_hkd">Hong Kong Dollar</string>
+    <string name="currency_huf">Hungarian Forint</string>
+    <string name="currency_idr">Indonesian Rupiah</string>
+    <string name="currency_ils">Israeli New Shekel</string>
+    <string name="currency_inr">Indian Rupee</string>
+    <string name="currency_isk">Icelandic Króna</string>
+    <string name="currency_mxn">Mexican Peso</string>
+    <string name="currency_myr">Malaysian Ringgit</string>
+    <string name="currency_nok">Norwegian Krone</string>
+    <string name="currency_nzd">New Zealand Dollar</string>
+    <string name="currency_php">Philippine Peso</string>
+    <string name="currency_pln">Polish Zloty</string>
+    <string name="currency_ron">Romanian Leu</string>
+    <string name="currency_sek">Swedish Krona</string>
+    <string name="currency_zar">South African Rand</string>
+</resources>
